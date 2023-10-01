@@ -80,7 +80,7 @@ public class WeatherDataCrudController {
         );
     }
 
-    @Operation(summary = "Обновление всех данных о погоде")
+    @Operation(summary = "Обновление данных о погоде")
     @PutMapping("{city}")
     public ResponseEntity<WeatherResponseDto> update(
             @Parameter(description = "Название города")
