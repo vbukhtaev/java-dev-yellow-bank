@@ -3,10 +3,8 @@ package ru.bukhtaev.repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.util.NotEnoughSpaceException;
-import ru.bukhtaev.validation.MessageProvider;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -27,9 +25,6 @@ class InMemoryRepositoryTest {
      * Вместимость репозитория.
      */
     private static final int CAPACITY = 4;
-
-    @Mock
-    private MessageProvider messageProvider;
 
     /**
      * Тестируемый репозиторий.

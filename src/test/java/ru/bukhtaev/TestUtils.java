@@ -38,12 +38,6 @@ public class TestUtils {
     public static final String MESSAGE_INCORRECT_COUNT = "Invalid count: {0}";
 
     /**
-     * Сообщение о том, что методу {@link WeatherProcessingServiceImpl#getAverageTemperature(List, int)}
-     * не удалось вычислить общую среднюю температуру.
-     */
-    public static final String MESSAGE_FAILED_TO_COMPUTE = "Failed to compute!";
-
-    /**
      * Сообщение о том, что методу {@link WeatherCrudServiceImpl#getTemperature(String, ChronoUnit)}
      * не удалось найти запрашиваемые данные.
      */
