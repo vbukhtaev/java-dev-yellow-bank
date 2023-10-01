@@ -2,6 +2,10 @@ package ru.bukhtaev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +17,7 @@ import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.service.IWeatherCrudService;
 import ru.bukhtaev.util.Accuracy;
+import ru.bukhtaev.validation.handling.ErrorResponse;
 
 import java.time.temporal.ChronoUnit;
 
@@ -21,7 +26,7 @@ import java.time.temporal.ChronoUnit;
  */
 @Tag(name = "CRUD операции")
 @RestController
-@RequestMapping("/api/weather")
+@RequestMapping(value = "/api/weather", produces = "application/json")
 public class WeatherDataCrudController {
 
     /**
@@ -50,6 +55,26 @@ public class WeatherDataCrudController {
     }
 
     @Operation(summary = "Получение температуры на текущую дату по городу")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Температура найдена"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Температура не найдена",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
     @GetMapping("{city}")
     public ResponseEntity<Double> get(
             @Parameter(description = "Название города")
@@ -63,6 +88,19 @@ public class WeatherDataCrudController {
     }
 
     @Operation(summary = "Добавление данных о погоде")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Запись о погоде создана"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
     @PostMapping("{city}")
     public ResponseEntity<WeatherResponseDto> create(
             @Parameter(description = "Название города")
@@ -81,6 +119,19 @@ public class WeatherDataCrudController {
     }
 
     @Operation(summary = "Обновление данных о погоде")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Запись о погоде обновлена/создана"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
     @PutMapping("{city}")
     public ResponseEntity<WeatherResponseDto> update(
             @Parameter(description = "Название города")
@@ -99,6 +150,19 @@ public class WeatherDataCrudController {
     }
 
     @Operation(summary = "Удаление всех данных о погоде для города")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Записи о погоде с указанным городом удалены"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
     @DeleteMapping("{city}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
