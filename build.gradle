@@ -1,65 +1,44 @@
 plugins {
-    id "java"
-    id "application"
-    id "com.github.johnrengelman.shadow" version "8.1.1"
+	id 'java'
+	id 'org.springframework.boot' version '3.1.4'
+	id 'io.spring.dependency-management' version '1.1.3'
 }
 
-group = "ru.bukhtaev"
-version = "1.0-SNAPSHOT"
-mainClassName = "ru.bukhtaev.Main"
+group = 'ru.bukhtaev'
+version = '0.0.1-SNAPSHOT'
 
-def encoding = "UTF-8"
-def jarName = "weather-app-fat-jar"
-
-ext {
-    lombokVersion = "1.18.30"
-    jUnitVersion = "5.9.1"
-    mockitoVersion = "5.5.0"
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = encoding
-}
-tasks.withType(Javadoc).configureEach {
-    options.encoding = encoding
-}
-
-// Таска с использованием специального плагина Shadow.
-shadowJar {
-    archiveBaseName.set(jarName + "-shadow")
-
-    configurations = [project.configurations.runtimeClasspath]
-}
-
-// Таска без использования специального плагина.
-tasks.register("fatJar", Jar) {
-    manifest {
-        attributes "Main-Class": mainClassName
-    }
-
-    archiveBaseName.set(jarName + "-native")
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
+java {
+	sourceCompatibility = '17'
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
+}
+
+ext {
+	lombokVersion = "1.18.30"
+	mapStructVersion = "1.5.5.Final"
+	openApiStarterVersion = "2.2.0"
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+	implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
-    testImplementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
+	// https://mvnrepository.com/artifact/org.projectlombok/lombok
+	compileOnly "org.projectlombok:lombok:$lombokVersion"
+	annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-    testImplementation platform("org.junit:junit-bom:$jUnitVersion")
-    testImplementation "org.junit.jupiter:junit-jupiter"
+	// https://mvnrepository.com/artifact/org.mapstruct/mapstruct
+	implementation "org.mapstruct:mapstruct:$mapStructVersion"
+	annotationProcessor "org.mapstruct:mapstruct-processor:$mapStructVersion"
+
+	// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$openApiStarterVersion"
+
+	testImplementation "org.springframework.boot:spring-boot-starter-test"
 }
 
-test {
-    useJUnitPlatform()
+tasks.named('test') {
+	useJUnitPlatform()
 }

@@ -1,6 +1,7 @@
 package ru.bukhtaev.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -8,7 +9,7 @@ import java.util.function.Predicate;
  *
  * @param <T> тип объектов
  */
-public interface Repository<T> {
+public interface IRepository<T> {
 
     /**
      * Возвращает все объекты типа {@code T}.
@@ -24,6 +25,14 @@ public interface Repository<T> {
      * @return объекты, удовлетворяющие переданному условию.
      */
     List<T> find(final Predicate<T> condition);
+
+    /**
+     * Возвращает первый найденный объект, удовлетворяющий переданному условию.
+     *
+     * @param condition условие
+     * @return первый найденный объект, удовлетворяющий переданному условию
+     */
+    Optional<T> findFirst(final Predicate<T> condition);
 
     /**
      * Сохраняет переданный список объектов типа {@code T}.
@@ -50,4 +59,11 @@ public interface Repository<T> {
      * @param object объект типа {@code T}
      */
     void remove(final T object);
+
+    /**
+     * Удаляет все объекты типа {@code T} с указанным названием города.
+     *
+     * @param cityName название города
+     */
+    void remove(final String cityName);
 }

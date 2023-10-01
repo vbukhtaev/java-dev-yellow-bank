@@ -1,7 +1,7 @@
 package ru.bukhtaev.util;
 
 /**
- * Исключение для ситуации, когда данных нет.
+ * Исключение для ситуации, когда данные не найдены.
  */
 public class DataNotFoundException extends RuntimeException {
 
