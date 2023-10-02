@@ -1,15 +1,16 @@
 package ru.bukhtaev;
 
-import ru.bukhtaev.model.Weather;
+import ru.bukhtaev.repository.InMemoryRepository;
+import ru.bukhtaev.service.GenerationServiceImpl;
+import ru.bukhtaev.service.WeatherCrudServiceImpl;
+import ru.bukhtaev.service.WeatherProcessingServiceImpl;
 
-import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.Set;
 
 /**
- * Утилитный класс, содержащий полезные для тестирования методы.
+ * Утилитный класс, содержащий полезные для тестирования константы.
  */
 public class TestUtils {
 
@@ -20,23 +21,26 @@ public class TestUtils {
     }
 
     /**
-     * Создает объект класса {@link Weather} с указанной температурой
-     * и случайными значениями остальных параметров.
-     *
-     * @param temperature температура
-     * @return объект класса {@link Weather} с указанной температурой
-     * и случайными значениями остальных параметров.
+     * Сообщение о том, что отсутствуют данные о погоде.
      */
-    public static Weather createTestData(final Map<UUID, String> regionsMap, final double temperature) {
-        final List<UUID> regionIds = regionsMap.keySet().stream().toList();
+    public static final String MESSAGE_THERE_IS_NO_DATA = "There is no weather data!";
 
-        final UUID id = regionIds.get(new Random().nextInt(0, regionIds.size()));
+    /**
+     * Сообщение о том, что в качестве аргумента в метод {@link GenerationServiceImpl#generate(Set, int)}
+     * передано пустое множество городов.
+     */
+    public static final String MESSAGE_EMPTY_CITIES_SET = "Empty cities set!";
 
-        return Weather.builder()
-                .regionId(id)
-                .regionName(regionsMap.get(id))
-                .temperature(temperature)
-                .dateTime(LocalDateTime.now().withNano(0))
-                .build();
-    }
+    /**
+     * Сообщение о том, что в качестве аргумента в метод {@link GenerationServiceImpl#generate(Set, int)}
+     * передано некорректное количество записей.
+     */
+    public static final String MESSAGE_INCORRECT_COUNT = "Invalid count: {0}";
+
+    /**
+     * Сообщение о том, что методу {@link WeatherCrudServiceImpl#getTemperature(String, ChronoUnit)}
+     * не удалось найти запрашиваемые данные.
+     */
+    public static final String MESSAGE_TEMPERATURE_NOT_FOUND
+            = "No temperature was found for city=<{0}> and the current time";
 }

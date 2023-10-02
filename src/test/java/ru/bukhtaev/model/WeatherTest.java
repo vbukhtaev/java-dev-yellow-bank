@@ -2,7 +2,6 @@ package ru.bukhtaev.model;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.bukhtaev.repository.impl.InMemoryRepository;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -21,15 +20,15 @@ class WeatherTest {
     @BeforeEach
     public void setUp() {
         weather1 = Weather.builder()
-                .regionId(UUID.randomUUID())
-                .regionName("Region1")
+                .cityId(UUID.randomUUID())
+                .cityName("City1")
                 .temperature(20.5)
                 .dateTime(LocalDateTime.now())
                 .build();
 
         weather2 = Weather.builder()
-                .regionId(UUID.randomUUID())
-                .regionName("Region1")
+                .cityId(UUID.randomUUID())
+                .cityName("City1")
                 .temperature(20.5)
                 .dateTime(LocalDateTime.now())
                 .build();
@@ -40,8 +39,8 @@ class WeatherTest {
         // given
         final String expectedString = String.format(
                 "Weather(%s, '%s', %s°C, %s)",
-                weather1.getRegionId(),
-                weather1.getRegionName(),
+                weather1.getCityId(),
+                weather1.getCityName(),
                 weather1.getTemperature(),
                 weather1.getDateTime().format(DATE_TIME_FORMATTER)
         );
@@ -55,8 +54,8 @@ class WeatherTest {
     void testEquals() {
         // given
         final Weather weather3 = Weather.builder()
-                .regionId(weather1.getRegionId())
-                .regionName(weather1.getRegionName())
+                .cityId(weather1.getCityId())
+                .cityName(weather1.getCityName())
                 .temperature(weather1.getTemperature())
                 .dateTime(weather1.getDateTime())
                 .build();
@@ -71,8 +70,8 @@ class WeatherTest {
     void testHashCode() {
         // given
         final Weather weather3 = Weather.builder()
-                .regionId(weather1.getRegionId())
-                .regionName(weather1.getRegionName())
+                .cityId(weather1.getCityId())
+                .cityName(weather1.getCityName())
                 .temperature(weather1.getTemperature())
                 .dateTime(weather1.getDateTime())
                 .build();
