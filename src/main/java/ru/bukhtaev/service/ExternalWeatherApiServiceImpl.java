@@ -3,7 +3,6 @@ package ru.bukhtaev.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
@@ -21,7 +20,6 @@ import java.text.MessageFormat;
 /**
  * Сервис для выполнения запросов к внешнему API данных о погоде.
  */
-@Slf4j
 @Service
 @RateLimiter(name = "rateLimitedApi")
 public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService {
