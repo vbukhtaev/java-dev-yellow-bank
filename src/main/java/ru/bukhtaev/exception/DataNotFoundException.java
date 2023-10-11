@@ -1,4 +1,4 @@
-package ru.bukhtaev.util;
+package ru.bukhtaev.exception;
 
 /**
  * Исключение для ситуации, когда данные не найдены.

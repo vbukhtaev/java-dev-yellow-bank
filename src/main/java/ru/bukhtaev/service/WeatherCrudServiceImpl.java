@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.repository.IRepository;
-import ru.bukhtaev.util.DataNotFoundException;
+import ru.bukhtaev.exception.DataNotFoundException;
 import ru.bukhtaev.validation.MessageProvider;
 
 import java.time.LocalDate;

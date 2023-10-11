@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import ru.bukhtaev.model.Weather;
-import ru.bukhtaev.util.NotEnoughSpaceException;
+import ru.bukhtaev.exception.NotEnoughSpaceException;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;

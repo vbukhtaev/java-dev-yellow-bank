@@ -1,0 +1,38 @@
+generation:
+  cities: Kazan, Yekaterinburg, Novosibirsk
+  count: 16
+
+management:
+  endpoints:
+    web.exposure.include: "*"
+  endpoint:
+    health.show-details: always
+  health:
+    circuit-breakers.enabled: true
+    rate limiters.enabled: true
+
+resilience4j:
+  rate-limiter:
+    metrics:
+      enabled: true
+    instances:
+      rateLimiterApi:
+        register-health-indicator: true
+        limit-for-period: 1_000_000
+        limit-refresh-period: P30D
+        timeout-duration: 0s
+        allow-health-indicator-to-fail: true
+        subscribe-for-events: true
+        event-consumer-buffer-size: 50
+
+external-api:
+  base-url: https://api.weatherapi.com
+  token: mock_api_token # fixme Your API token here
+  token-param-name: key
+  current:
+    url: /v1/current.json
+    location-param-name: q
+    language-param-name: lang
+    aqi-param-name: aqi
+  bulk-request:
+    locations-limit: 49

@@ -3,7 +3,7 @@ package ru.bukhtaev.repository;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 import ru.bukhtaev.model.Weather;
-import ru.bukhtaev.util.NotEnoughSpaceException;
+import ru.bukhtaev.exception.NotEnoughSpaceException;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
