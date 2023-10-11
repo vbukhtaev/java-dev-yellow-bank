@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 @Validated
 @ConfigurationProperties(prefix = "external-api")
-public class ExternalApiConfig {
+public class ExternalApiConfigParams {
 
     /**
      * Базовый URL.
@@ -42,7 +42,7 @@ public class ExternalApiConfig {
     @Valid
     @NotNull
     @NestedConfigurationProperty
-    private CurrentConfig current;
+    private CurrentWeatherConfigParams current;
 
     /**
      * Параметры конфигурации эндпоинта внешнего API для массовых запросов.
@@ -50,5 +50,5 @@ public class ExternalApiConfig {
     @Valid
     @NotNull
     @NestedConfigurationProperty
-    private BulkRequestConfig bulkRequest;
+    private BulkRequestConfigParams bulkRequest;
 }

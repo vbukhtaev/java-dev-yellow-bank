@@ -13,7 +13,7 @@ import java.io.Serializable;
 @Schema(description = "Ошибка в ответе внешнего API")
 @Getter
 @AllArgsConstructor
-public class ApiError implements Serializable {
+public class ApiErrorDto implements Serializable {
 
     /**
      * Код ошибки.

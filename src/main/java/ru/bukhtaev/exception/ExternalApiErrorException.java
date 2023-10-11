@@ -1,4 +1,4 @@
-package ru.bukhtaev.util.external;
+package ru.bukhtaev.exception;
 
 /**
  * Исключение для ситуации, когда произошла ошибка на сервере внешнего API.

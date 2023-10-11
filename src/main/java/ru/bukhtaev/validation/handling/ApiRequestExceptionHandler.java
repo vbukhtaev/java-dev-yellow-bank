@@ -10,9 +10,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.bukhtaev.util.DataNotFoundException;
-import ru.bukhtaev.util.external.CommonClientSideException;
-import ru.bukhtaev.util.external.CommonServerSideException;
+import ru.bukhtaev.exception.DataNotFoundException;
+import ru.bukhtaev.exception.CommonClientSideException;
+import ru.bukhtaev.exception.CommonServerSideException;
 
 import java.time.LocalDateTime;
 import java.util.List;

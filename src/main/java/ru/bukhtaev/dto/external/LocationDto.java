@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Информация о местоположении")
 @Getter
-public class Location implements Serializable {
+public class LocationDto implements Serializable {
 
     /**
      * Название местоположения.

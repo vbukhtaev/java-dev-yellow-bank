@@ -27,7 +27,7 @@ public class ExternalApiErrorResponse implements Serializable {
      */
     @Schema(description = "Ошибка API")
     @JsonProperty("error")
-    private ApiError error;
+    private ApiErrorDto error;
 }
 
 

@@ -1,4 +1,4 @@
-package ru.bukhtaev.util.external;
+package ru.bukhtaev.util;
 
 import lombok.Getter;
 

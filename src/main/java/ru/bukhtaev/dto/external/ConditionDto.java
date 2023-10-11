@@ -11,7 +11,7 @@ import java.io.Serializable;
  */
 @Schema(description = "Погодные условия")
 @Getter
-public class Condition implements Serializable {
+public class ConditionDto implements Serializable {
 
     /**
      * Описание погодных условий.

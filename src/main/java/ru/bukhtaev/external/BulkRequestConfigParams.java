@@ -9,7 +9,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class BulkRequestConfig {
+public class BulkRequestConfigParams {
 
     /**
      * Лимит местоположений для массового запроса к внешнему API.

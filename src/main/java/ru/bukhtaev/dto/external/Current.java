@@ -61,7 +61,7 @@ public class Current implements Serializable {
      */
     @Schema(description = "Погодные условия")
     @JsonProperty("condition")
-    private Condition condition;
+    private ConditionDto condition;
 
     /**
      * Максимальная скорость ветра в милях в час.
@@ -188,6 +188,6 @@ public class Current implements Serializable {
     @Schema(description = "Информация о качестве воздуха")
     @JsonProperty("air_quality")
     @JsonInclude(NON_NULL)
-    private AirQuality airQuality;
+    private AirQualityDto airQuality;
 
 }

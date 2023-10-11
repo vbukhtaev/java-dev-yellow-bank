@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Информация о качестве воздуха")
 @Getter
-public class AirQuality implements Serializable {
+public class AirQualityDto implements Serializable {
 
     /**
      * Оксид углерода (мкг/м<sup>3</sup>).

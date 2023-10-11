@@ -1,4 +1,4 @@
-package ru.bukhtaev.util.external;
+package ru.bukhtaev.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

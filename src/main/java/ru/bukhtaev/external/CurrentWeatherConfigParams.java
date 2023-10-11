@@ -9,7 +9,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class CurrentConfig {
+public class CurrentWeatherConfigParams {
 
     /**
      * URL данных о погоде в реальном времени.

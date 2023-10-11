@@ -1,4 +1,4 @@
-package ru.bukhtaev.util;
+package ru.bukhtaev.exception;
 
 import java.text.MessageFormat;
 

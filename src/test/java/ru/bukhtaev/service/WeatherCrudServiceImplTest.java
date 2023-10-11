@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.repository.IRepository;
-import ru.bukhtaev.util.DataNotFoundException;
+import ru.bukhtaev.exception.DataNotFoundException;
 import ru.bukhtaev.validation.MessageProvider;
 
 import java.text.MessageFormat;

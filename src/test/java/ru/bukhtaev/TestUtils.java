@@ -1,12 +1,9 @@
 package ru.bukhtaev;
 
-import ru.bukhtaev.repository.InMemoryRepository;
 import ru.bukhtaev.service.GenerationServiceImpl;
 import ru.bukhtaev.service.WeatherCrudServiceImpl;
-import ru.bukhtaev.service.WeatherProcessingServiceImpl;
 
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Set;
 
 /**

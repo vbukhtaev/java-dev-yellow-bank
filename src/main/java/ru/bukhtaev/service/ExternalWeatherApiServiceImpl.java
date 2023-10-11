@@ -12,8 +12,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.external.ExternalApiErrorResponse;
 import ru.bukhtaev.dto.external.ExternalApiWeatherResponse;
-import ru.bukhtaev.external.ExternalApiConfig;
-import ru.bukhtaev.util.external.*;
+import ru.bukhtaev.exception.*;
+import ru.bukhtaev.external.ExternalApiConfigParams;
+import ru.bukhtaev.util.ErrorCode;
 
 import java.text.MessageFormat;
 
@@ -32,7 +33,7 @@ public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService
     /**
      * Параметры конфигурации внешнего API.
      */
-    private final ExternalApiConfig apiConfig;
+    private final ExternalApiConfigParams apiConfig;
 
     /**
      * Клиент.
@@ -54,7 +55,7 @@ public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService
     @Autowired
     public ExternalWeatherApiServiceImpl(
             @Qualifier("restTemplateWithLoggingErrors") final RestTemplate restTemplate,
-            final ExternalApiConfig apiConfig,
+            final ExternalApiConfigParams apiConfig,
             final ObjectMapper mapper
     ) {
         this.restTemplate = restTemplate;

@@ -27,7 +27,7 @@ public class ExternalApiWeatherResponse implements Serializable {
      */
     @Schema(description = "Информация о местоположении")
     @JsonProperty("location")
-    private Location location;
+    private LocationDto location;
 
     /**
      * Информация о погоде на текущий момент времени.

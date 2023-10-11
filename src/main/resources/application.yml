@@ -27,7 +27,7 @@ resilience4j:
 
 external-api:
   base-url: https://api.weatherapi.com
-  token: # fixme Your API token here
+  token: mock_api_token # fixme Your API token here
   token-param-name: key
   current:
     url: /v1/current.json
