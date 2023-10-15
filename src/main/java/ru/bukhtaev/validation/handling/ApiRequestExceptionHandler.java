@@ -10,8 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.bukhtaev.exception.DataNotFoundException;
 import ru.bukhtaev.exception.CommonClientSideException;
+import ru.bukhtaev.exception.CommonException;
 import ru.bukhtaev.exception.CommonServerSideException;
 
 import java.time.LocalDateTime;
@@ -27,9 +27,9 @@ import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 @RestControllerAdvice
 public class ApiRequestExceptionHandler {
 
-    @ExceptionHandler(Throwable.class)
-    public ResponseEntity<ErrorResponse> handle(final Throwable exception) {
-        log.error(exception.getMessage(), exception);
+    @ExceptionHandler(CommonException.class)
+    public ResponseEntity<ErrorResponse> handle(final CommonException exception) {
+        log.error(exception.getErrorMessage(), exception);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(
                         new Violation("Unknown error"),
@@ -63,16 +63,6 @@ public class ApiRequestExceptionHandler {
                 ))
                 .toList();
         return new ErrorResponse(violations, LocalDateTime.now());
-    }
-
-    @ExceptionHandler(DataNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handle(final DataNotFoundException exception) {
-        log.error(exception.getMessage(), exception);
-        return new ErrorResponse(
-                new Violation(exception.getMessage()),
-                LocalDateTime.now()
-        );
     }
 
     @ExceptionHandler(CommonClientSideException.class)

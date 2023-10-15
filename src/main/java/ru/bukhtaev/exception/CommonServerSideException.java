@@ -3,10 +3,10 @@ package ru.bukhtaev.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * Общее исключение для ситуации, когда возникла ошибка по вине клиента.
- * В данном случае под клиентом подразумевается пользователь этого приложения.
+ * Общее исключение для ситуации, когда возникла ошибка по вине сервера.
+ * В данном случае под сервером подразумевается это приложение.
  */
-public class CommonServerSideException extends ExternalApiException {
+public class CommonServerSideException extends CommonException {
 
     /**
      * Конструктор.

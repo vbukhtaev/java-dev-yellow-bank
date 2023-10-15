@@ -1,15 +1,17 @@
 package ru.bukhtaev.service;
 
 import org.springframework.stereotype.Service;
+import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
+import ru.bukhtaev.model.WeatherType;
 import ru.bukhtaev.validation.MessageProvider;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
-import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_EMPTY_CITIES_SET;
-import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_INCORRECT_COUNT;
+import static ru.bukhtaev.validation.MessageUtils.*;
 
 /**
  * Реализация сервиса генерации данных о погоде.
@@ -37,10 +39,20 @@ public class GenerationServiceImpl implements IGenerationService {
     }
 
     @Override
-    public List<Weather> generate(final Set<String> cities, int count) {
+    public List<Weather> generate(
+            final List<City> cities,
+            final List<WeatherType> types,
+            int count
+    ) {
         if (cities.isEmpty()) {
             throw new IllegalArgumentException(
-                    messageProvider.getMessage(MESSAGE_CODE_EMPTY_CITIES_SET)
+                    messageProvider.getMessage(MESSAGE_CODE_EMPTY_CITIES_LIST)
+            );
+        }
+
+        if (types.isEmpty()) {
+            throw new IllegalArgumentException(
+                    messageProvider.getMessage(MESSAGE_CODE_EMPTY_TYPES_LIST)
             );
         }
 
@@ -50,18 +62,14 @@ public class GenerationServiceImpl implements IGenerationService {
             );
         }
 
-        final Map<UUID, String> citiesMap = cities.stream()
-                .collect(Collectors.toMap(id -> UUID.randomUUID(), city -> city));
-
-        final List<UUID> cityIds = citiesMap.keySet().stream().toList();
-
         final List<Weather> data = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            final int index = random.nextInt(cityIds.size());
+            final int cityIndex = random.nextInt(cities.size());
+            final int typeIndex = random.nextInt(types.size());
 
             final Weather weather = Weather.builder()
-                    .cityId(cityIds.get(index))
-                    .cityName(citiesMap.get(cityIds.get(index)))
+                    .city(cities.get(cityIndex))
+                    .type(types.get(typeIndex))
                     .temperature(
                             random.nextDouble(-40.0, 40.0)
                     )

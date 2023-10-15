@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:${WEATHER_APP_TEST_DB_NAME}
+    generate-unique-name: false
+    name: ${WEATHER_APP_TEST_DB_NAME}
+    username: ${WEATHER_APP_TEST_DB_USERNAME}
+    password: ${WEATHER_APP_TEST_DB_PASSWORD}
+    hikari:
+      connection-timeout: 5_000 # 5 секунд
+      minimum-idle: 4
+      maximum-pool-size: 8
+      max-lifetime: 900_000 # 15 минут
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    change-log: classpath:db/changelog/test-changelog-master.yml
+
+generation:
+  count: 16
+
+external-api:
+  base-url: https://api.weatherapi.com
+  token: ${WEATHER_API_TOKEN}
+  token-param-name: key
+  current:
+    url: /v1/current.json
+    location-param-name: q
+    language-param-name: lang
+    aqi-param-name: aqi
+  bulk-request:
+    locations-limit: 49

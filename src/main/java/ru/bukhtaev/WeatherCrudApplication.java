@@ -3,7 +3,7 @@ package ru.bukhtaev;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import ru.bukhtaev.external.ExternalApiConfigParams;
+import ru.bukhtaev.config.external.ExternalApiConfigParams;
 
 @SpringBootApplication
 @EnableConfigurationProperties(ExternalApiConfigParams.class)

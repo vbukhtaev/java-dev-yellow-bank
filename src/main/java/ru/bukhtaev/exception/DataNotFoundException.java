@@ -1,16 +1,19 @@
 package ru.bukhtaev.exception;
 
+import org.springframework.http.HttpStatus;
+
 /**
- * Исключение для ситуации, когда данные не найдены.
+ * Исключение для ситуации, когда не удалось найти запрашиваемые данные.
  */
-public class DataNotFoundException extends RuntimeException {
+public class DataNotFoundException extends CommonClientSideException {
 
     /**
      * Конструктор.
      *
-     * @param message сообщение об ошибке
+     * @param errorMessage сообщение об ошибке
+     * @param paramNames   названия параметров, значения которых привели к исключению
      */
-    public DataNotFoundException(final String message) {
-        super(message);
+    public DataNotFoundException(final String errorMessage, final String... paramNames) {
+        super(HttpStatus.NOT_FOUND, errorMessage, paramNames);
     }
 }
