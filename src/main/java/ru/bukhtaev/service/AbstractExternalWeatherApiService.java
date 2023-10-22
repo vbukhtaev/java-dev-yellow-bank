@@ -3,69 +3,74 @@ package ru.bukhtaev.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.bukhtaev.config.external.ExternalApiConfigParams;
 import ru.bukhtaev.dto.external.ExternalApiErrorResponse;
 import ru.bukhtaev.dto.external.ExternalApiWeatherResponse;
-import ru.bukhtaev.exception.*;
-import ru.bukhtaev.config.external.ExternalApiConfigParams;
+import ru.bukhtaev.dto.mapper.IWeatherMapper;
+import ru.bukhtaev.exception.CommonServerSideException;
 import ru.bukhtaev.exception.external.*;
+import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.util.ErrorCode;
 
 import java.text.MessageFormat;
 
 /**
- * Сервис для выполнения запросов к внешнему API данных о погоде.
+ * Частичная реализация сервиса для выполнения запросов к внешнему API данных о погоде.
  */
-@Service
 @RateLimiter(name = "rateLimitedApi")
-public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService {
+public abstract class AbstractExternalWeatherApiService implements IExternalWeatherApiService {
 
     /**
      * Название параметра для передачи местоположения.
      */
-    private static final String LOCATION_PARAM_NAME = "location";
+    protected static final String LOCATION_PARAM_NAME = "location";
 
     /**
      * Параметры конфигурации внешнего API.
      */
-    private final ExternalApiConfigParams apiConfig;
+    protected final ExternalApiConfigParams apiConfig;
 
     /**
      * Клиент.
      */
-    private final RestTemplate restTemplate;
+    protected final RestTemplate restTemplate;
 
     /**
      * Маппер объектов.
      */
-    private final ObjectMapper mapper;
+    protected final ObjectMapper objectMapper;
+
+    /**
+     * Маппер для объектов типа {@link Weather}.
+     */
+    protected final IWeatherMapper dtoMapper;
 
     /**
      * Конструктор.
      *
-     * @param restTemplate клиент
      * @param apiConfig    параметры конфигурации внешнего API
-     * @param mapper       маппер объектов
+     * @param restTemplate клиент
+     * @param objectMapper маппер объектов
+     * @param dtoMapper    маппер для объектов типа {@link Weather}.
      */
-    @Autowired
-    public ExternalWeatherApiServiceImpl(
-            @Qualifier("restTemplateWithLoggingErrors") final RestTemplate restTemplate,
+    protected AbstractExternalWeatherApiService(
             final ExternalApiConfigParams apiConfig,
-            final ObjectMapper mapper
+            final RestTemplate restTemplate,
+            final ObjectMapper objectMapper,
+            final IWeatherMapper dtoMapper
     ) {
-        this.restTemplate = restTemplate;
         this.apiConfig = apiConfig;
-        this.mapper = mapper;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.dtoMapper = dtoMapper;
     }
 
     @Override
-    public ExternalApiWeatherResponse current(
+    public ExternalApiWeatherResponse getCurrent(
             final String location,
             final String language,
             final Boolean aqi
@@ -84,7 +89,7 @@ public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService
                 throw new CommonServerSideException("Failed to get current weather from the external API");
             }
 
-            return mapper.readValue(
+            return objectMapper.readValue(
                     responseBody,
                     ExternalApiWeatherResponse.class
             );
@@ -139,7 +144,7 @@ public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService
             final String url
     ) throws JsonProcessingException {
 
-        final var errorResponse = mapper.readValue(
+        final var errorResponse = objectMapper.readValue(
                 responseBody,
                 ExternalApiErrorResponse.class
         );

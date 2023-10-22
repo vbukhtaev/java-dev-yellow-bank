@@ -3,6 +3,7 @@ package ru.bukhtaev.service.crud;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.bukhtaev.exception.DataNotFoundException;
 import ru.bukhtaev.exception.UniqueNameException;
 import ru.bukhtaev.model.WeatherType;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.transaction.annotation.Isolation.READ_UNCOMMITTED;
 import static ru.bukhtaev.model.BaseEntity.FIELD_ID;
 import static ru.bukhtaev.model.NameableEntity.FIELD_NAME;
 import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_NOT_FOUND;
@@ -22,6 +24,10 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_UNIQ
  * JPA-реализация сервиса CRUD операций над типами погоды.
  */
 @Service("typeCrudServiceJpa")
+@Transactional(
+        isolation = READ_UNCOMMITTED,
+        readOnly = true
+)
 public class WeatherTypeCrudServiceJpaImpl implements IWeatherTypeCrudService {
 
     /**
@@ -55,13 +61,19 @@ public class WeatherTypeCrudServiceJpaImpl implements IWeatherTypeCrudService {
     }
 
     @Override
+    public Optional<WeatherType> getByName(final String name) {
+        return repository.findFirstByName(name);
+    }
+
+    @Override
     public List<WeatherType> getAll() {
         return repository.findAll();
     }
 
     @Override
-    public WeatherType create(@Valid final WeatherType newWeatherType) {
-        repository.findFirstByName(newWeatherType.getName())
+    @Transactional(isolation = READ_UNCOMMITTED)
+    public WeatherType create(@Valid final WeatherType newType) {
+        repository.findFirstByName(newType.getName())
                 .ifPresent(type -> {
                     throw new UniqueNameException(
                             messageProvider.getMessage(
@@ -71,15 +83,17 @@ public class WeatherTypeCrudServiceJpaImpl implements IWeatherTypeCrudService {
                             FIELD_NAME
                     );
                 });
-        return repository.save(newWeatherType);
+        return repository.save(newType);
     }
 
     @Override
+    @Transactional(isolation = READ_UNCOMMITTED)
     public void delete(final UUID id) {
         repository.deleteById(id);
     }
 
     @Override
+    @Transactional(isolation = READ_UNCOMMITTED)
     public WeatherType update(final UUID id, final WeatherType changedType) {
         repository.findFirstByNameAndIdNot(changedType.getName(), id)
                 .ifPresent(type -> {
@@ -99,6 +113,7 @@ public class WeatherTypeCrudServiceJpaImpl implements IWeatherTypeCrudService {
     }
 
     @Override
+    @Transactional(isolation = READ_UNCOMMITTED)
     public WeatherType replace(final UUID id, @Valid final WeatherType newType) {
         repository.findFirstByNameAndIdNot(newType.getName(), id)
                 .ifPresent(type -> {
