@@ -7,8 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@ActiveProfiles("test")
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 public abstract class AbstractIntegrationTest {
 

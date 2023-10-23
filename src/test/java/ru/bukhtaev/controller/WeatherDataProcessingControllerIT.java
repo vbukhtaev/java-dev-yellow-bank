@@ -5,12 +5,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
-import ru.bukhtaev.repository.IRepository;
+import ru.bukhtaev.model.WeatherType;
+import ru.bukhtaev.repository.jpa.ICityJpaRepository;
+import ru.bukhtaev.repository.jpa.IWeatherJpaRepository;
+import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
@@ -27,27 +30,61 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
      * Репозиторий для работы с данными о погоде.
      */
     @Autowired
-    private IRepository<Weather> repository;
+    private IWeatherJpaRepository weatherRepository;
+
+    /**
+     * Репозиторий для работы с типами погоды.
+     */
+    @Autowired
+    private IWeatherTypeJpaRepository typeRepository;
+
+    /**
+     * Репозиторий для работы с городами.
+     */
+    @Autowired
+    private ICityJpaRepository cityRepository;
 
     private Weather weather1;
     private Weather weather2;
     private Weather weather3;
     private Weather weather4;
 
+    private City cityA;
+    private City cityB;
+
     @BeforeEach
     public void setUp() {
-        final String cityA = "City A";
-        final String cityB = "City B";
-        final UUID cityIdA = UUID.fromString("9f96d8a7-1f66-4443-b083-b4c0b2291b7e");
-        final UUID cityIdB = UUID.fromString("30dd69a3-0421-47f5-9387-f3083fe4b210");
+        cityA = cityRepository.save(
+                City.builder()
+                        .name("City A")
+                        .build()
+        );
+        cityB = cityRepository.save(
+                City.builder()
+                        .name("City B")
+                        .build()
+        );
+
+        final WeatherType typeA = typeRepository.save(
+                WeatherType.builder()
+                        .name("Type A")
+                        .build()
+        );
+        final WeatherType typeB = typeRepository.save(
+                WeatherType.builder()
+                        .name("Type B")
+                        .build()
+        );
+
         final LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
 
-        weather1 = Weather.builder().cityId(cityIdA).cityName(cityA).temperature(25.37).dateTime(now).build();
-        weather2 = Weather.builder().cityId(cityIdA).cityName(cityA).temperature(-17.9).dateTime(now).build();
-        weather3 = Weather.builder().cityId(cityIdB).cityName(cityB).temperature(24.7).dateTime(now).build();
-        weather4 = Weather.builder().cityId(cityIdB).cityName(cityB).temperature(0.84).dateTime(now).build();
+        weather1 = Weather.builder().city(cityA).type(typeA).temperature(25.37).dateTime(now).build();
+        weather2 = Weather.builder().city(cityA).type(typeA).temperature(-17.9).dateTime(yesterday).build();
+        weather3 = Weather.builder().city(cityB).type(typeB).temperature(24.7).dateTime(now).build();
+        weather4 = Weather.builder().city(cityB).type(typeB).temperature(0.84).dateTime(yesterday).build();
 
-        repository.saveAll(List.of(
+        weatherRepository.saveAll(List.of(
                 weather1,
                 weather2,
                 weather3,
@@ -57,7 +94,9 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        repository.clear();
+        weatherRepository.deleteAll();
+        typeRepository.deleteAll();
+        cityRepository.deleteAll();
     }
 
     @Test
@@ -122,7 +161,7 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void getCitiesStrictlyWarmer() throws Exception {
+    void getCitiesStrictlyWarmer_shouldReturnCitiesStrictlyWarmerThatSpecifiedTemperature() throws Exception {
         // given
         final double temperature = 0.0;
         final var requestBuilder = get("/api/weather/processing/cities-strictly-warmer");
@@ -146,6 +185,14 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     void groupTemperaturesById() throws Exception {
         // given
         final var requestBuilder = get("/api/weather/processing/grouped-by-id");
+        final String resultJson = """
+                {
+                    "cityIdA": [25.37, -17.9],
+                    "cityIdB": [24.7, 0.84]
+                }
+                """
+                .replace("cityIdA", cityA.getId().toString())
+                .replace("cityIdB", cityB.getId().toString());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -154,12 +201,9 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                 .andExpectAll(
                         status().isOk(),
                         content().contentType(MediaType.APPLICATION_JSON),
-                        content().json("""
-                                {
-                                    "9f96d8a7-1f66-4443-b083-b4c0b2291b7e": [25.37, -17.9],
-                                    "30dd69a3-0421-47f5-9387-f3083fe4b210": [24.7, 0.84]
-                                }
-                                """)
+                        jsonPath("$").isMap(),
+                        jsonPath("$", aMapWithSize(2)),
+                        content().json(resultJson)
                 );
     }
 
@@ -177,23 +221,31 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                         content().contentType(MediaType.APPLICATION_JSON),
                         jsonPath("$").isMap(),
                         jsonPath("$", aMapWithSize(3)),
-                        jsonPath("$.['1'][0].cityId").value(weather4.getCityId().toString()),
-                        jsonPath("$.['1'][0].cityName").value(weather4.getCityName()),
+                        jsonPath("$.['1'][0].city.id").value(weather4.getCity().getId().toString()),
+                        jsonPath("$.['1'][0].city.name").value(weather4.getCity().getName()),
+                        jsonPath("$.['1'][0].type.id").value(weather4.getType().getId().toString()),
+                        jsonPath("$.['1'][0].type.name").value(weather4.getType().getName()),
                         jsonPath("$.['1'][0].temperature").value(weather4.getTemperature()),
                         jsonPath("$.['1'][0].dateTime")
                                 .value(containsString(weather4.getDateTime().format(DATE_TIME_FORMATTER))),
-                        jsonPath("$.['-18'][0].cityId").value(weather2.getCityId().toString()),
-                        jsonPath("$.['-18'][0].cityName").value(weather2.getCityName()),
+                        jsonPath("$.['-18'][0].city.id").value(weather2.getCity().getId().toString()),
+                        jsonPath("$.['-18'][0].city.name").value(weather2.getCity().getName()),
+                        jsonPath("$.['-18'][0].type.id").value(weather2.getType().getId().toString()),
+                        jsonPath("$.['-18'][0].type.name").value(weather2.getType().getName()),
                         jsonPath("$.['-18'][0].temperature").value(weather2.getTemperature()),
                         jsonPath("$.['-18'][0].dateTime")
                                 .value(containsString(weather2.getDateTime().format(DATE_TIME_FORMATTER))),
-                        jsonPath("$.['25'][0].cityId").value(weather1.getCityId().toString()),
-                        jsonPath("$.['25'][0].cityName").value(weather1.getCityName()),
+                        jsonPath("$.['25'][0].city.id").value(weather1.getCity().getId().toString()),
+                        jsonPath("$.['25'][0].city.name").value(weather1.getCity().getName()),
+                        jsonPath("$.['25'][0].type.id").value(weather1.getType().getId().toString()),
+                        jsonPath("$.['25'][0].type.name").value(weather1.getType().getName()),
                         jsonPath("$.['25'][0].temperature").value(weather1.getTemperature()),
                         jsonPath("$.['25'][0].dateTime")
                                 .value(containsString(weather1.getDateTime().format(DATE_TIME_FORMATTER))),
-                        jsonPath("$.['25'][1].cityId").value(weather3.getCityId().toString()),
-                        jsonPath("$.['25'][1].cityName").value(weather3.getCityName()),
+                        jsonPath("$.['25'][1].city.id").value(weather3.getCity().getId().toString()),
+                        jsonPath("$.['25'][1].city.name").value(weather3.getCity().getName()),
+                        jsonPath("$.['25'][1].type.id").value(weather3.getType().getId().toString()),
+                        jsonPath("$.['25'][1].type.name").value(weather3.getType().getName()),
                         jsonPath("$.['25'][1].temperature").value(weather3.getTemperature()),
                         jsonPath("$.['25'][1].dateTime")
                                 .value(containsString(weather3.getDateTime().format(DATE_TIME_FORMATTER)))

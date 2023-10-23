@@ -2,6 +2,7 @@ package ru.bukhtaev.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.validation.MessageProvider;
 
@@ -19,10 +20,11 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_THERE_IS_NO_DATA;
  * Реализация сервиса обработки данных о погоде.
  */
 @Service
+@Validated
 public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
 
     /**
-     * Сервис предоставления сообщений/
+     * Сервис предоставления сообщений.
      */
     private final MessageProvider messageProvider;
 
@@ -41,8 +43,8 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
         validate(data);
 
         return data.stream()
-                .collect(Collectors.groupingBy(
-                        Weather::getCityName,
+                .collect(Collectors.groupingBy(weather ->
+                                weather.getCity().getName(),
                         Collectors.collectingAndThen(
                                 Collectors.averagingDouble(Weather::getTemperature),
                                 avgTemperature -> round(avgTemperature, precision)
@@ -70,7 +72,7 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
 
         return data.stream()
                 .filter(weather -> weather.getTemperature() > temperature)
-                .map(Weather::getCityName)
+                .map(weather -> weather.getCity().getName())
                 .collect(Collectors.toSet());
     }
 
@@ -79,7 +81,8 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
         validate(data);
 
         return data.stream()
-                .collect(Collectors.groupingBy(Weather::getCityName,
+                .collect(Collectors.groupingBy(weather ->
+                                weather.getCity().getName(),
                         Collectors.mapping(weather -> weather.getTemperature() > temperature,
                                 Collectors.toList())))
                 .entrySet().stream()
@@ -94,8 +97,8 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
 
         return data.stream()
                 .collect(
-                        Collectors.groupingBy(
-                                Weather::getCityId,
+                        Collectors.groupingBy(weather ->
+                                        weather.getCity().getId(),
                                 Collectors.mapping(
                                         Weather::getTemperature, Collectors.toList()
                                 )

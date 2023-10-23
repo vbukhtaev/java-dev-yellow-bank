@@ -4,11 +4,11 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 /**
- * Общее исключение для ситуации, когда возникла ошибка по вине сервера.
- * В данном случае под сервером подразумевается это приложение.
+ * Общее исключение для ситуации, когда возникла ошибка по вине клиента.
+ * В данном случае под клиентом подразумевается пользователь этого приложения.
  */
 @Getter
-public abstract class CommonClientSideException extends ExternalApiException {
+public abstract class CommonClientSideException extends CommonException {
 
     /**
      * Названия параметров, значения которых привели к исключению.

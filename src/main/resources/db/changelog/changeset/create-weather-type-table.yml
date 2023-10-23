@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-weather_type-table
+      author: VBukhtaev
+      changes:
+        - createTable:
+            tableName: weather_type
+            remarks: Тип погоды
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: weather_type_pk
+                    nullable: false
+              - column:
+                  name: name
+                  remarks: Название
+                  type: VARCHAR(64)
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: weather_type_name_uq
+                    nullable: false

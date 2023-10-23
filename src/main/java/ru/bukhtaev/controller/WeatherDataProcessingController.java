@@ -8,17 +8,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.bukhtaev.dto.WeatherRequestDto;
 import ru.bukhtaev.dto.WeatherResponseDto;
 import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.Weather;
-import ru.bukhtaev.repository.IRepository;
 import ru.bukhtaev.service.IWeatherProcessingService;
+import ru.bukhtaev.service.crud.IWeatherCrudService;
 import ru.bukhtaev.validation.handling.ErrorResponse;
 
 import java.util.List;
@@ -36,35 +36,35 @@ import java.util.stream.Collectors;
 public class WeatherDataProcessingController {
 
     /**
-     * Маппер для {@link WeatherRequestDto} и {@link WeatherResponseDto}.
+     * Маппер для DTO данных о погоде.
      */
     private final IWeatherMapper mapper;
 
     /**
-     * Сервис для работы с данными о погоде.
+     * Сервис для обработки данных о погоде.
      */
     private final IWeatherProcessingService processingService;
 
     /**
-     * Репозиторий данных о погоде.
+     * Сервис CRUD операций над данными о погоде.
      */
-    private final IRepository<Weather> repository;
+    private final IWeatherCrudService crudService;
 
     /**
      * Конструктор.
      *
-     * @param mapper            маппер для {@link WeatherRequestDto} и {@link WeatherResponseDto}
-     * @param processingService сервис для работы с данными о погоде
-     * @param repository        репозиторий данных о погоде
+     * @param mapper            маппер для DTO данных о погоде
+     * @param processingService сервис для обработки данных о погоде
+     * @param crudService       сервис CRUD операций над данными о погоде
      */
     @Autowired
     public WeatherDataProcessingController(
             final IWeatherMapper mapper,
             final IWeatherProcessingService processingService,
-            final IRepository<Weather> repository) {
-        this.mapper = mapper;
+            @Qualifier("weatherCrudServiceJpa") final IWeatherCrudService crudService) {
         this.processingService = processingService;
-        this.repository = repository;
+        this.crudService = crudService;
+        this.mapper = mapper;
     }
 
     @Operation(summary = "Получение общей средней температуры")
@@ -86,7 +86,7 @@ public class WeatherDataProcessingController {
             @Parameter(description = "Точность")
             @RequestParam(value = "precision", defaultValue = "2") final Integer precision
     ) {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.getAverageTemperature(data, precision)
@@ -112,7 +112,7 @@ public class WeatherDataProcessingController {
             @Parameter(description = "Точность")
             @RequestParam(value = "precision", defaultValue = "2") final Integer precision
     ) {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.getAverageTemperatures(data, precision)
@@ -141,7 +141,7 @@ public class WeatherDataProcessingController {
             @Parameter(description = "Температура")
             @RequestParam(value = "temperature") final Double temperature
     ) {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.getCitiesWarmerThan(data, temperature)
@@ -170,7 +170,7 @@ public class WeatherDataProcessingController {
             @Parameter(description = "Температура")
             @RequestParam(value = "temperature") final Double temperature
     ) {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.getCitiesStrictlyWarmerThan(data, temperature)
@@ -193,7 +193,7 @@ public class WeatherDataProcessingController {
     })
     @GetMapping("grouped-by-id")
     public ResponseEntity<Map<UUID, List<Double>>> groupTemperaturesById() {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.groupTemperaturesById(data)
@@ -216,7 +216,7 @@ public class WeatherDataProcessingController {
     })
     @GetMapping("grouped-by-temperature")
     public ResponseEntity<Map<Integer, List<WeatherResponseDto>>> groupByTemperature() {
-        final List<Weather> data = repository.findAll();
+        final List<Weather> data = crudService.getAll();
 
         return ResponseEntity.ok(
                 processingService.groupByTemperature(data)

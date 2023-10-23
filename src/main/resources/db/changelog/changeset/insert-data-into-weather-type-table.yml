@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-data-into-weather-type-table
+      author: VBukhtaev
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/weather-types.sql
+            stripComments: true

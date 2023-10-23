@@ -1,6 +1,25 @@
-generation:
-  cities: Kazan, Yekaterinburg, Novosibirsk
-  count: 16
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:${WEATHER_APP_DB_NAME}
+    generate-unique-name: false
+    name: ${WEATHER_APP_DB_NAME}
+    username: ${WEATHER_APP_DB_USERNAME}
+    password: ${WEATHER_APP_DB_PASSWORD}
+    hikari:
+      connection-timeout: 20_000 # 20 секунд
+      minimum-idle: 4
+      maximum-pool-size: 8
+      max-lifetime: 900_000 # 15 минут
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+  h2:
+    console:
+      enabled: true
+  liquibase:
+    change-log: classpath:db/changelog/changelog-master.yml
 
 management:
   endpoints:
@@ -25,9 +44,12 @@ resilience4j:
         subscribe-for-events: true
         event-consumer-buffer-size: 50
 
+generation:
+  count: 16
+
 external-api:
   base-url: https://api.weatherapi.com
-  token: mock_api_token # fixme Your API token here
+  token: ${WEATHER_API_TOKEN}
   token-param-name: key
   current:
     url: /v1/current.json

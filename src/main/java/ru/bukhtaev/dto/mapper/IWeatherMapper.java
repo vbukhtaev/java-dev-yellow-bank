@@ -9,9 +9,15 @@ import ru.bukhtaev.model.Weather;
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 
 /**
- * Маппер для {@link WeatherRequestDto} и {@link WeatherResponseDto}.
+ * Маппер для объектов типа {@link Weather}.
  */
-@Mapper(componentModel = SPRING)
+@Mapper(
+        componentModel = SPRING,
+        uses = {
+                ICityMapper.class,
+                IWeatherTypeMapper.class
+        }
+)
 public interface IWeatherMapper {
 
     /**
@@ -20,16 +26,17 @@ public interface IWeatherMapper {
      * @param entity {@link Weather}
      * @return DTO {@link WeatherResponseDto}
      */
-    WeatherResponseDto convertToDto(Weather entity);
+    WeatherResponseDto convertToDto(final Weather entity);
 
     /**
      * Конвертирует DTO {@link WeatherRequestDto} в {@link Weather},
-     * игнорируя поля {@code cityId} и {@code cityName}.
+     * игнорируя поле {@code id}.
      *
      * @param dto DTO {@link WeatherRequestDto}
      * @return {@link Weather}
      */
-    @Mapping(target = "cityId", ignore = true)
-    @Mapping(target = "cityName", ignore = true)
-    Weather convertFromDto(WeatherRequestDto dto);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "cityId", target = "city.id")
+    @Mapping(source = "typeId", target = "type.id")
+    Weather convertFromDto(final WeatherRequestDto dto);
 }

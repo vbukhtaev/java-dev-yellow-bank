@@ -13,7 +13,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.external.ExternalApiErrorResponse;
 import ru.bukhtaev.dto.external.ExternalApiWeatherResponse;
 import ru.bukhtaev.exception.*;
-import ru.bukhtaev.external.ExternalApiConfigParams;
+import ru.bukhtaev.config.external.ExternalApiConfigParams;
+import ru.bukhtaev.exception.external.*;
 import ru.bukhtaev.util.ErrorCode;
 
 import java.text.MessageFormat;
@@ -89,7 +90,7 @@ public class ExternalWeatherApiServiceImpl implements IExternalWeatherApiService
             );
 
         } catch (JsonProcessingException e) {
-            throw new ResponseBobyProceedingException(responseBody);
+            throw new ResponseBodyProceedingException(responseBody);
         }
     }
 
