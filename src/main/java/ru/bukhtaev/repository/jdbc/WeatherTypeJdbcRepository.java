@@ -7,10 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.bukhtaev.model.WeatherType;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * JDBC-репозиторий типов погоды.
@@ -65,6 +62,14 @@ public class WeatherTypeJdbcRepository {
     private static final String DELETE = """
             DELETE FROM weather_type
             WHERE id = :id
+            """;
+
+    /**
+     * Шаблон SQL-запроса для удаления всех типов погоды.
+     */
+    private static final String DELETE_ALL = """
+            DELETE FROM weather_type
+            WHERE TRUE
             """;
 
     /**
@@ -143,6 +148,16 @@ public class WeatherTypeJdbcRepository {
         jdbcTemplate.update(
                 DELETE,
                 Map.of(PARAM_ID, id)
+        );
+    }
+
+    /**
+     * Удаляет все типы погоды.
+     */
+    public void deleteAll() {
+        jdbcTemplate.update(
+                DELETE_ALL,
+                Collections.emptyMap()
         );
     }
 

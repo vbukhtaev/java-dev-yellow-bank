@@ -8,4 +8,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractServiceTest {
+
+    /**
+     * Название поля исключения, хранящего сообщение об ошибке.
+     */
+    protected static final String ERROR_MESSAGE_PROPERTY_NAME = "errorMessage";
 }

@@ -2,6 +2,7 @@ package ru.bukhtaev.dto.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.io.Serializable;
  */
 @Schema(description = "Погодные условия")
 @Getter
+@Builder
 public class ConditionDto implements Serializable {
 
     /**
