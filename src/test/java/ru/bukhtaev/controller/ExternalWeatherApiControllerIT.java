@@ -549,6 +549,33 @@ class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    void get_with5xxError_shouldThrowServerSideException() throws Exception {
+        // given
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(new ResponseEntity<>(INTERNAL_SERVER_ERROR));
+
+        // when
+        final var requestBuilder = get(
+                URL_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpectAll(
+                        status().is5xxServerError(),
+                        content().contentType(MediaType.APPLICATION_JSON),
+                        jsonPath("$.violations", hasSize(1)),
+                        jsonPath("$.violations[0].message",
+                                is(INTERNAL_SERVER_ERROR.getReasonPhrase()))
+                );
+    }
+
+    @Test
     void getAndSave_withHappyPath_shouldSaveAndReturnCurrentWeather() throws Exception {
         // given
         final BigDecimal temperature = weatherResponse.getCurrent().getTemperatureC();
@@ -955,6 +982,38 @@ class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
                 ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(objectMapper.writeValueAsString(errorResponse))
         );
+
+        // when
+        final var requestBuilder = post(
+                URL_SAVE_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpectAll(
+                        status().is5xxServerError(),
+                        content().contentType(MediaType.APPLICATION_JSON),
+                        jsonPath("$.violations", hasSize(1)),
+                        jsonPath("$.violations[0].message",
+                                is(INTERNAL_SERVER_ERROR.getReasonPhrase()))
+                );
+    }
+
+    @Test
+    void getAndSave_with5xxError_shouldThrowServerSideException() throws Exception {
+        // given
+        uriBuilder.queryParam(
+                apiConfig.getCurrent().getLanguageParamName(),
+                Locale.ENGLISH.getLanguage()
+        );
+
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(new ResponseEntity<>(INTERNAL_SERVER_ERROR));
 
         // when
         final var requestBuilder = post(
