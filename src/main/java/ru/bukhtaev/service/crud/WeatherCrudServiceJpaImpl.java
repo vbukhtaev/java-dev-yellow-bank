@@ -2,6 +2,7 @@ package ru.bukhtaev.service.crud;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.bukhtaev.exception.DataNotFoundException;
 import ru.bukhtaev.exception.InvalidPropertyException;
 import ru.bukhtaev.exception.UniqueWeatherException;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
+import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static ru.bukhtaev.model.BaseEntity.FIELD_ID;
 import static ru.bukhtaev.model.Weather.*;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
@@ -29,6 +32,10 @@ import static ru.bukhtaev.validation.MessageUtils.*;
  * JPA-реализация сервиса CRUD операций над данными о погоде.
  */
 @Service("weatherCrudServiceJpa")
+@Transactional(
+        isolation = READ_COMMITTED,
+        readOnly = true
+)
 public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
 
     /**
@@ -83,6 +90,7 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     }
 
     @Override
+    @Transactional(isolation = SERIALIZABLE)
     public Weather create(final Weather newWeather) {
         weatherRepository.findFirstByCityIdAndDateTime(
                 newWeather.getCity().getId(),
@@ -125,11 +133,13 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     }
 
     @Override
+    @Transactional(isolation = READ_COMMITTED)
     public void delete(final UUID id) {
         weatherRepository.deleteById(id);
     }
 
     @Override
+    @Transactional(isolation = SERIALIZABLE)
     public Weather update(final UUID id, final Weather changedWeather) {
         final Weather weatherToBeUpdated = findWeatherById(id);
 
@@ -168,6 +178,7 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     }
 
     @Override
+    @Transactional(isolation = SERIALIZABLE)
     public Weather replace(final UUID id, final Weather newWeather) {
         final Weather weatherToBeReplaced = findWeatherById(id);
 
@@ -215,7 +226,6 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
         return weatherRepository.save(weatherToBeReplaced);
     }
 
-
     @Override
     public List<Weather> getTemperatures(final String cityName) {
         return weatherRepository.findAll()
@@ -243,6 +253,7 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     }
 
     @Override
+    @Transactional(isolation = READ_COMMITTED)
     public void delete(final String cityName) {
         weatherRepository.deleteAllByCityName(cityName);
     }

@@ -1,16 +1,17 @@
 package ru.bukhtaev.service.crud;
 
 import jakarta.validation.Valid;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.bukhtaev.model.WeatherType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Сервис CRUD операций над типами погоды.
  */
-@Transactional(readOnly = true)
+@Validated
 public interface IWeatherTypeCrudService {
 
     /**
@@ -22,6 +23,15 @@ public interface IWeatherTypeCrudService {
     WeatherType getById(final UUID id);
 
     /**
+     * Возвращает объект типа {@link Optional} с типом погоды с указанным названием, если он существует.
+     * В противном случае возвращает пустой объект типа {@link Optional}.
+     *
+     * @param name название
+     * @return объект типа {@link Optional} с типом погоды с указанным названием, если он существует
+     */
+    Optional<WeatherType> getByName(final String name);
+
+    /**
      * Возвращает все типы погоды.
      *
      * @return все типы погоды.
@@ -31,37 +41,33 @@ public interface IWeatherTypeCrudService {
     /**
      * Сохраняет новый тип погоды в базу данных.
      *
-     * @param newWeatherType новый тип погоды
+     * @param newType новый тип погоды
      * @return сохраненный тип погоды
      */
-    @Transactional
-    WeatherType create(@Valid final WeatherType newWeatherType);
+    WeatherType create(@Valid final WeatherType newType);
 
     /**
      * Удаляет тип погоды с указанным ID из базы данных.
      *
      * @param id ID
      */
-    @Transactional
     void delete(final UUID id);
 
     /**
      * Обновляет тип погоды с указанным ID.
      *
      * @param id                 ID
-     * @param changedWeatherType данные для обновления
+     * @param changedType данные для обновления
      * @return обновленный тип погоды
      */
-    @Transactional
-    WeatherType update(final UUID id, final WeatherType changedWeatherType);
+    WeatherType update(final UUID id, final WeatherType changedType);
 
     /**
      * Заменяет тип погоды с указанными ID.
      *
      * @param id             ID
-     * @param newWeatherType новый тип погоды
+     * @param newType новый тип погоды
      * @return замененный тип погоды
      */
-    @Transactional
-    WeatherType replace(final UUID id, @Valid final WeatherType newWeatherType);
+    WeatherType replace(final UUID id, @Valid final WeatherType newType);
 }

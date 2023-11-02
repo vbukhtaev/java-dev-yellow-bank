@@ -3,7 +3,6 @@ package ru.bukhtaev.service.crud;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.bukhtaev.model.Weather;
 
@@ -15,7 +14,6 @@ import java.util.UUID;
  * Сервис CRUD операций над данными о погоде.
  */
 @Validated
-@Transactional(readOnly = true)
 public interface IWeatherCrudService {
 
     /**
@@ -39,7 +37,6 @@ public interface IWeatherCrudService {
      * @param newWeather новая запись о погоде
      * @return сохраненная запись о погоде
      */
-    @Transactional
     Weather create(@Valid final Weather newWeather);
 
     /**
@@ -47,7 +44,6 @@ public interface IWeatherCrudService {
      *
      * @param id ID
      */
-    @Transactional
     void delete(final UUID id);
 
     /**
@@ -57,7 +53,6 @@ public interface IWeatherCrudService {
      * @param changedWeather данные для обновления
      * @return обновленная запись о погоде
      */
-    @Transactional
     Weather update(final UUID id, final Weather changedWeather);
 
     /**
@@ -67,7 +62,6 @@ public interface IWeatherCrudService {
      * @param newWeather новая запись о погоде
      * @return замененная запись о погоде
      */
-    @Transactional
     Weather replace(final UUID id, @Valid final Weather newWeather);
 
     /**
@@ -93,6 +87,5 @@ public interface IWeatherCrudService {
      *
      * @param cityName название города
      */
-    @Transactional
     void delete(@NotBlank final String cityName);
 }

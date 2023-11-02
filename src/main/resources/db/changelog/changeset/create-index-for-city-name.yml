@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-index-for-city-name
+      author: VBukhtaev
+      changes:
+        - createIndex:
+            tableName: city
+            indexName: idx_city_name
+            columns:
+              - column:
+                  name: name

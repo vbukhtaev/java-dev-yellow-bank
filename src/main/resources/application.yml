@@ -21,6 +21,11 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/changelog-master.yml
 
+logging:
+  level:
+    org.springframework.transaction: TRACE
+    org.springframework.transaction.support: TRACE
+
 management:
   endpoints:
     web.exposure.include: "*"

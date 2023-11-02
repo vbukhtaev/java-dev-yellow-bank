@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-index-for-weather-city-id-and-date-time
+      author: VBukhtaev
+      changes:
+        - createIndex:
+            tableName: weather
+            indexName: idx_weather_city_id_and_date_time
+            columns:
+              - column:
+                  name: city_id
+              - column:
+                  name: date_time
