@@ -17,7 +17,6 @@ import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
 import ru.bukhtaev.util.Accuracy;
 
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,16 +37,6 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
      * URL.
      */
     private static final String API_V1_WEATHER_DATA = "/api/v1/weather-data";
-
-    /**
-     * Текущая дата и время.
-     */
-    private static final LocalDateTime NOW = LocalDateTime.now().withNano(0);
-
-    /**
-     * Дата и время сутки назад от текущей.
-     */
-    private static final LocalDateTime YESTERDAY = NOW.minusDays(1);
 
     /**
      * Маппер для DTO данных о погоде.
@@ -348,7 +337,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                         jsonPath("$.violations[0].message", is(
                                 MessageFormat.format(
                                         "Weather in the city with ID = <{0}> for time <{1}> already exists!",
-                                        cityKazan.getName(),
+                                        cityKazan.getId(),
                                         weather1.getDateTime().format(DATE_TIME_FORMATTER)
                                 )
                         ))
@@ -439,7 +428,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                         jsonPath("$.violations[0].message", is(
                                 MessageFormat.format(
                                         "Weather in the city with ID = <{0}> for time <{1}> already exists!",
-                                        cityKazan.getName(),
+                                        cityKazan.getId(),
                                         weather1.getDateTime().format(DATE_TIME_FORMATTER)
                                 )
                         ))

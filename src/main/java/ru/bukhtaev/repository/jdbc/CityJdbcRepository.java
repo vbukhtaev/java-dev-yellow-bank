@@ -7,10 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.bukhtaev.model.City;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * JDBC-репозиторий городов.
@@ -65,6 +62,14 @@ public class CityJdbcRepository {
     private static final String DELETE = """
             DELETE FROM city
             WHERE id = :id
+            """;
+
+    /**
+     * Шаблон SQL-запроса для удаления всех городов.
+     */
+    private static final String DELETE_ALL = """
+            DELETE FROM city
+            WHERE TRUE
             """;
 
     /**
@@ -143,6 +148,16 @@ public class CityJdbcRepository {
         jdbcTemplate.update(
                 DELETE,
                 Map.of(PARAM_ID, id)
+        );
+    }
+
+    /**
+     * Удаляет все города.
+     */
+    public void deleteAll() {
+        jdbcTemplate.update(
+                DELETE_ALL,
+                Collections.emptyMap()
         );
     }
 

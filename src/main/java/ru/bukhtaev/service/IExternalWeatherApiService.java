@@ -1,14 +1,11 @@
 package ru.bukhtaev.service;
 
-import jakarta.validation.constraints.NotBlank;
-import org.springframework.validation.annotation.Validated;
 import ru.bukhtaev.dto.external.ExternalApiWeatherResponse;
 import ru.bukhtaev.model.Weather;
 
 /**
  * Сервис для выполнения запросов к внешнему API данных о погоде.
  */
-@Validated
 public interface IExternalWeatherApiService {
 
     /**
@@ -20,7 +17,7 @@ public interface IExternalWeatherApiService {
      * @return информацию о погоде в данный момент времени для указанного местоположения
      */
     ExternalApiWeatherResponse getCurrent(
-            @NotBlank final String location,
+            final String location,
             final String language,
             final Boolean aqi
     );

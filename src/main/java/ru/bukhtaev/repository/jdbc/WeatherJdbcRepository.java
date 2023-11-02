@@ -7,10 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.bukhtaev.model.Weather;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * JDBC-репозиторий данных о погоде.
@@ -126,6 +123,14 @@ public class WeatherJdbcRepository {
     private static final String DELETE_BY_ID = """
             DELETE FROM weather
             WHERE id = :id
+            """;
+
+    /**
+     * Шаблон SQL-запроса для удаления всех данных о погоде.
+     */
+    private static final String DELETE_ALL = """
+            DELETE FROM weather
+            WHERE TRUE
             """;
 
     /**
@@ -246,6 +251,16 @@ public class WeatherJdbcRepository {
         jdbcTemplate.update(
                 DELETE_BY_ID,
                 Map.of(PARAM_ID, id)
+        );
+    }
+
+    /**
+     * Удаляет все данные о погоде.
+     */
+    public void deleteAll() {
+        jdbcTemplate.update(
+                DELETE_ALL,
+                Collections.emptyMap()
         );
     }
 

@@ -11,7 +11,7 @@ import ru.bukhtaev.model.NameableEntity;
 @Setter
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor // todo лишние аннотации
+@AllArgsConstructor
 public class NameableRequestDto {
 
     /**

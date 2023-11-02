@@ -2,6 +2,7 @@ package ru.bukhtaev.dto.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
  */
 @Schema(description = "Информация о местоположении")
 @Getter
+@Builder
 public class LocationDto implements Serializable {
 
     /**

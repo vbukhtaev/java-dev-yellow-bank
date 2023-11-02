@@ -115,15 +115,27 @@ public abstract class AbstractExternalWeatherApiService implements IExternalWeat
         final UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(
                         apiConfig.getBaseUrl() + apiConfig.getCurrent().getUrl()
                 )
-                .queryParam(apiConfig.getTokenParamName(), apiConfig.getToken())
-                .queryParam(apiConfig.getCurrent().getLocationParamName(), location);
+                .queryParam(apiConfig.getTokenParamName(), apiConfig.getToken());
+
+        if (location != null && !location.isEmpty()) {
+            uriBuilder.queryParam(
+                    apiConfig.getCurrent().getLocationParamName(),
+                    location
+            );
+        }
 
         if (language != null && !language.isEmpty()) {
-            uriBuilder.queryParam(apiConfig.getCurrent().getLanguageParamName(), language);
+            uriBuilder.queryParam(
+                    apiConfig.getCurrent().getLanguageParamName(),
+                    language
+            );
         }
 
         if (Boolean.TRUE.equals(aqiNeeded)) {
-            uriBuilder.queryParam(apiConfig.getCurrent().getAqiParamName(), "yes");
+            uriBuilder.queryParam(
+                    apiConfig.getCurrent().getAqiParamName(),
+                    "yes"
+            );
         }
 
         return uriBuilder.encode().toUriString();

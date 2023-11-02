@@ -92,6 +92,22 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     @Override
     @Transactional(isolation = SERIALIZABLE)
     public Weather create(final Weather newWeather) {
+        final City newCity = newWeather.getCity();
+        if (newCity == null || newCity.getId() == null) {
+            throw new InvalidPropertyException(
+                    messageProvider.getMessage(MESSAGE_CODE_INVALID_FIELD),
+                    FIELD_CITY
+            );
+        }
+
+        final WeatherType newType = newWeather.getType();
+        if (newType == null || newType.getId() == null) {
+            throw new InvalidPropertyException(
+                    messageProvider.getMessage(MESSAGE_CODE_INVALID_FIELD),
+                    FIELD_TYPE
+            );
+        }
+
         weatherRepository.findFirstByCityIdAndDateTime(
                 newWeather.getCity().getId(),
                 newWeather.getDateTime()
@@ -106,22 +122,6 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
                     FIELD_DATE_TIME
             );
         });
-
-        final City newCity = newWeather.getCity();
-        if (newCity == null || newCity.getId() == null) {
-            throw new InvalidPropertyException(
-                    messageProvider.getMessage(MESSAGE_CODE_INVALID_FIELD),
-                    "cityId"
-            );
-        }
-
-        final WeatherType newType = newWeather.getType();
-        if (newType == null || newType.getId() == null) {
-            throw new InvalidPropertyException(
-                    messageProvider.getMessage(MESSAGE_CODE_INVALID_FIELD),
-                    FIELD_TYPE
-            );
-        }
 
         final City foundCity = findCityById(newCity.getId());
         newWeather.setCity(foundCity);
@@ -143,27 +143,24 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     public Weather update(final UUID id, final Weather changedWeather) {
         final Weather weatherToBeUpdated = findWeatherById(id);
 
-        weatherRepository.findFirstByCityIdAndDateTimeAndIdNot(
-                changedWeather.getCity().getId(),
-                changedWeather.getDateTime(),
-                id
-        ).ifPresent(weather -> {
-            throw new UniqueWeatherException(
-                    messageProvider.getMessage(
-                            MESSAGE_CODE_WEATHER_UNIQUE_CITY_AND_TIME,
-                            weather.getCity().getName(),
-                            weather.getDateTime().format(DATE_TIME_FORMATTER)
-                    ),
-                    FIELD_CITY,
-                    FIELD_DATE_TIME
-            );
-        });
-
-        Optional.ofNullable(changedWeather.getTemperature()).ifPresent(weatherToBeUpdated::setTemperature);
-        Optional.ofNullable(changedWeather.getDateTime()).ifPresent(weatherToBeUpdated::setDateTime);
-
         final City newCity = changedWeather.getCity();
         if (newCity != null && newCity.getId() != null) {
+            weatherRepository.findFirstByCityIdAndDateTimeAndIdNot(
+                    changedWeather.getCity().getId(),
+                    changedWeather.getDateTime(),
+                    id
+            ).ifPresent(weather -> {
+                throw new UniqueWeatherException(
+                        messageProvider.getMessage(
+                                MESSAGE_CODE_WEATHER_UNIQUE_CITY_AND_TIME,
+                                changedWeather.getCity().getId(),
+                                changedWeather.getDateTime().format(DATE_TIME_FORMATTER)
+                        ),
+                        FIELD_CITY,
+                        FIELD_DATE_TIME
+                );
+            });
+
             final City city = findCityById(newCity.getId());
             weatherToBeUpdated.setCity(city);
         }
@@ -174,6 +171,9 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
             weatherToBeUpdated.setType(type);
         }
 
+        Optional.ofNullable(changedWeather.getTemperature()).ifPresent(weatherToBeUpdated::setTemperature);
+        Optional.ofNullable(changedWeather.getDateTime()).ifPresent(weatherToBeUpdated::setDateTime);
+
         return weatherRepository.save(weatherToBeUpdated);
     }
 
@@ -182,16 +182,18 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     public Weather replace(final UUID id, final Weather newWeather) {
         final Weather weatherToBeReplaced = findWeatherById(id);
 
+        final var cityId = newWeather.getCity().getId();
+        final var dateTime = newWeather.getDateTime();
         weatherRepository.findFirstByCityIdAndDateTimeAndIdNot(
-                newWeather.getCity().getId(),
-                newWeather.getDateTime(),
+                cityId,
+                dateTime,
                 id
         ).ifPresent(weather -> {
             throw new UniqueWeatherException(
                     messageProvider.getMessage(
                             MESSAGE_CODE_WEATHER_UNIQUE_CITY_AND_TIME,
-                            weather.getCity().getName(),
-                            weather.getDateTime().format(DATE_TIME_FORMATTER)
+                            cityId,
+                            dateTime.format(DATE_TIME_FORMATTER)
                     ),
                     FIELD_CITY,
                     FIELD_DATE_TIME
@@ -199,7 +201,7 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
         });
 
         weatherToBeReplaced.setTemperature(newWeather.getTemperature());
-        weatherToBeReplaced.setDateTime(newWeather.getDateTime());
+        weatherToBeReplaced.setDateTime(dateTime);
 
         final City newCity = newWeather.getCity();
         if (newCity == null || newCity.getId() == null) {

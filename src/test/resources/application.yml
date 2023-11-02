@@ -1,18 +1,12 @@
 spring:
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:${WEATHER_APP_TEST_DB_NAME}
-    generate-unique-name: false
-    name: ${WEATHER_APP_TEST_DB_NAME}
-    username: ${WEATHER_APP_TEST_DB_USERNAME}
-    password: ${WEATHER_APP_TEST_DB_PASSWORD}
     hikari:
       connection-timeout: 5_000 # 5 секунд
       minimum-idle: 4
       maximum-pool-size: 8
       max-lifetime: 900_000 # 15 минут
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
 

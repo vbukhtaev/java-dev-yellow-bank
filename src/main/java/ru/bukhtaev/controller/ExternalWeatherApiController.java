@@ -93,7 +93,7 @@ public class ExternalWeatherApiController {
     @GetMapping("/current")
     public ResponseEntity<ExternalApiWeatherResponse> get(
             @Parameter(description = "Местоположение")
-            @RequestParam(value = "location") final String location,
+            @RequestParam(value = "location", required = false) final String location,
             @Parameter(description = "Язык")
             @RequestParam(value = "language", required = false) final String language,
             @Parameter(description = "Нужна ли информация о качестве воздуха")
@@ -142,7 +142,7 @@ public class ExternalWeatherApiController {
     @PostMapping("/save-current")
     public ResponseEntity<WeatherResponseDto> getAndSave(
             @Parameter(description = "Местоположение")
-            @RequestParam(value = "location") final String location,
+            @RequestParam(value = "location", required = false) final String location,
             @Parameter(description = "Нужна ли информация о качестве воздуха")
             @RequestParam(value = "aqi", required = false) final Boolean aqi
     ) {

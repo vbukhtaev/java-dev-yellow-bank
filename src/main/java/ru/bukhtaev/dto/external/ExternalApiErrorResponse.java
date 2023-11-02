@@ -2,10 +2,7 @@ package ru.bukhtaev.dto.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -18,6 +15,7 @@ import java.io.Serializable;
 @Schema(description = "Ответ с ошибкой от внешнего API")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExternalApiErrorResponse implements Serializable {
