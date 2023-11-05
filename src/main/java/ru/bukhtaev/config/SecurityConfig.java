@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .httpBasic(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .userDetailsService(this.userDetailsService)
+                .headers(headers -> headers.frameOptions(options -> options.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(toH2Console()).hasAuthority(H2_CONSOLE.getDescriptor())
                         .requestMatchers(antMatcher(POST, "/sign-up")).anonymous()
