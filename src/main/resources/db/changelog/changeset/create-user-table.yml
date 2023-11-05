@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user-table
+      author: VBukhtaev
+      changes:
+        - createTable:
+            tableName: user_table
+            remarks: Пользователь
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: user_table_pk
+                    nullable: false
+              - column:
+                  name: username
+                  remarks: Логин
+                  type: VARCHAR(64)
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: user_table_login_uq
+                    nullable: false
+              - column:
+                  name: password
+                  remarks: Пароль
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  remarks: Роль
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false

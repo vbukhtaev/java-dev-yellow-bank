@@ -1,8 +1,10 @@
 package ru.bukhtaev.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 /**
  * Конфигурация Open API.
@@ -17,6 +19,11 @@ import io.swagger.v3.oas.annotations.info.Info;
                         url = "https://t.me/VBukhtaev"
                 )
         )
+)
+@SecurityScheme(
+        type = SecuritySchemeType.HTTP,
+        name = "basicAuth",
+        scheme = "basic"
 )
 public class OpenApiConfig {
 }

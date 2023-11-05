@@ -25,6 +25,7 @@ logging:
   level:
     org.springframework.transaction: TRACE
     org.springframework.transaction.support: TRACE
+    org.springframework.security: TRACE
 
 management:
   endpoints:

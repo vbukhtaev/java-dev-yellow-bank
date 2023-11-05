@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.model.WeatherType;
@@ -19,6 +21,7 @@ import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.bukhtaev.controller.WeatherDataProcessingController.URL_API_WEATHER_PROCESSING;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 
 /**
@@ -100,10 +103,11 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getAverageTemperature_shouldReturnGeneralAverageTemperature() throws Exception {
         // given
         final int precision = 3;
-        final var requestBuilder = get("/api/weather/processing/average-temperature");
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperature");
 
         // when
         mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
@@ -117,10 +121,39 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getAverageTemperature_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final int precision = 3;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperature");
+
+        // when
+        mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAverageTemperature_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final int precision = 3;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperature");
+
+        // when
+        mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getAverageTemperatures_shouldReturnAverageTemperatureForEveryCity() throws Exception {
         // given
         final int precision = 3;
-        final var requestBuilder = get("/api/weather/processing/average-temperatures");
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperatures");
 
         // when
         mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
@@ -139,10 +172,39 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getAverageTemperatures_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final int precision = 3;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperatures");
+
+        // when
+        mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAverageTemperatures_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final int precision = 3;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/average-temperatures");
+
+        // when
+        mockMvc.perform(requestBuilder.param("precision", Integer.toString(precision)))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getCitiesWarmer_shouldReturnCitiesWarmerThatSpecifiedTemperature() throws Exception {
         // given
         final double temperature = 20.1;
-        final var requestBuilder = get("/api/weather/processing/cities-warmer");
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-warmer");
 
         // when
         mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
@@ -161,10 +223,39 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getCitiesWarmer_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final double temperature = 20.1;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-warmer");
+
+        // when
+        mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getCitiesWarmer_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final double temperature = 20.1;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-warmer");
+
+        // when
+        mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getCitiesStrictlyWarmer_shouldReturnCitiesStrictlyWarmerThatSpecifiedTemperature() throws Exception {
         // given
         final double temperature = 0.0;
-        final var requestBuilder = get("/api/weather/processing/cities-strictly-warmer");
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-strictly-warmer");
 
         // when
         mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
@@ -182,9 +273,38 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void groupTemperaturesById() throws Exception {
+    @WithMockUser
+    void getCitiesStrictlyWarmer_withoutReadAuthority_accessShouldBeDenied() throws Exception {
         // given
-        final var requestBuilder = get("/api/weather/processing/grouped-by-id");
+        final double temperature = 0.0;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-strictly-warmer");
+
+        // when
+        mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getCitiesStrictlyWarmer_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final double temperature = 0.0;
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/cities-strictly-warmer");
+
+        // when
+        mockMvc.perform(requestBuilder.param("temperature", Double.toString(temperature)))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void groupTemperaturesById_shouldReturnTemperaturesGroupedByCityId() throws Exception {
+        // given
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
         final String resultJson = """
                 {
                     "cityIdA": [25.37, -17.9],
@@ -208,9 +328,52 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void groupByTemperature() throws Exception {
+    @WithMockUser
+    void groupTemperaturesById_withoutReadAuthority_accessShouldBeDenied() throws Exception {
         // given
-        final var requestBuilder = get("/api/weather/processing/grouped-by-temperature");
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
+        final String resultJson = """
+                {
+                    "cityIdA": [25.37, -17.9],
+                    "cityIdB": [24.7, 0.84]
+                }
+                """
+                .replace("cityIdA", cityA.getId().toString())
+                .replace("cityIdB", cityB.getId().toString());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void groupTemperaturesById_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
+        final String resultJson = """
+                {
+                    "cityIdA": [25.37, -17.9],
+                    "cityIdB": [24.7, 0.84]
+                }
+                """
+                .replace("cityIdA", cityA.getId().toString())
+                .replace("cityIdB", cityB.getId().toString());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void groupByTemperature_shouldReturnWeatherDataGroupedByTemperature() throws Exception {
+        // given
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-temperature");
 
         // when
         mockMvc.perform(requestBuilder)
@@ -250,5 +413,31 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                         jsonPath("$.['25'][1].dateTime")
                                 .value(containsString(weather3.getDateTime().format(DATE_TIME_FORMATTER)))
                 );
+    }
+
+    @Test
+    @WithMockUser
+    void groupByTemperature_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-temperature");
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void groupByTemperature_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-temperature");
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
     }
 }

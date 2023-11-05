@@ -8,8 +8,12 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/create-index-for-city-name.yml
   - include:
+      file: db/changelog/changeset/create-user-table.yml
+  - include:
       file: db/changelog/changeset/create-index-for-weather-city-id-and-date-time.yml
   - include:
       file: db/changelog/changeset/insert-data-into-city-table.yml
   - include:
       file: db/changelog/changeset/insert-data-into-weather-type-table.yml
+  - include:
+      file: db/changelog/changeset/insert-data-into-user-table.yml

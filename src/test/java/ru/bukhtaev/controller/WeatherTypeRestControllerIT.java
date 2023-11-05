@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import ru.bukhtaev.dto.NameableRequestDto;
 import ru.bukhtaev.dto.mapper.IWeatherTypeMapper;
 import ru.bukhtaev.model.WeatherType;
@@ -20,16 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.bukhtaev.controller.WeatherTypeRestController.URL_API_V1_WEATHER_TYPES;
 
 /**
  * Интеграционные тесты для CRUD операций над типами погоды.
  */
 class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
-
-    /**
-     * URL.
-     */
-    private static final String API_V1_WEATHER_TYPES = "/api/v1/weather-types";
 
     /**
      * Маппер для DTO типов погоды.
@@ -62,11 +60,12 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:read")
     void getAll_shouldReturnAllEntities() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_WEATHER_TYPES);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -79,11 +78,42 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getAll_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAll_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:read")
     void getById_withExistentId_shouldReturnFoundEntity() throws Exception {
         // given
         final WeatherType saved = repository.save(mapper.convertFromDto(typeClear));
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_WEATHER_TYPES + "/{id}", saved.getId());
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -97,12 +127,43 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getById_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeClear));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getById_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeClear));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:read")
     void getById_withNonExistentId_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
         assertThat(repository.findAll()).hasSize(1);
         final String nonExistentId = UUID.randomUUID().toString();
-        final var requestBuilder = get(API_V1_WEATHER_TYPES + "/{id}", nonExistentId);
+        final var requestBuilder = get(URL_API_V1_WEATHER_TYPES + "/{id}", nonExistentId);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -122,12 +183,13 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:write")
     void create_withNonExistentName_shouldReturnCreatedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeBlizzard));
         assertThat(repository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(typeClear);
-        final var requestBuilder = post(API_V1_WEATHER_TYPES)
+        final var requestBuilder = post(URL_API_V1_WEATHER_TYPES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -150,12 +212,53 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:read")
+    void create_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(typeClear);
+        final var requestBuilder = post(URL_API_V1_WEATHER_TYPES)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void create_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(typeClear);
+        final var requestBuilder = post(URL_API_V1_WEATHER_TYPES)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:write")
     void create_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
         assertThat(repository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(typeClear);
-        final var requestBuilder = post(API_V1_WEATHER_TYPES)
+        final var requestBuilder = post(URL_API_V1_WEATHER_TYPES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -180,6 +283,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:write")
     void replace_withNonExistentName_shouldReturnReplacedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
@@ -190,7 +294,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
                 .name(newName)
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = put(API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+        final var requestBuilder = put(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -211,6 +315,63 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:read")
+    void replace_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Пасмурно";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = put(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final Optional<WeatherType> optWeatherType = repository.findById(saved.getId());
+        assertThat(optWeatherType).isPresent();
+        assertThat(optWeatherType.get().getName())
+                .isEqualTo(typeBlizzard.getName());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void replace_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Пасмурно";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = put(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final Optional<WeatherType> optWeatherType = repository.findById(saved.getId());
+        assertThat(optWeatherType).isPresent();
+        assertThat(optWeatherType.get().getName())
+                .isEqualTo(typeBlizzard.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:write")
     void replace_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
@@ -220,7 +381,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
                 .name(typeClear.getName())
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = put(API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+        final var requestBuilder = put(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -248,6 +409,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:write")
     void update_withNonExistentName_shouldReturnUpdatedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeClear));
@@ -258,7 +420,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
                 .name(newName)
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = patch(API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+        final var requestBuilder = patch(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -279,6 +441,63 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:read")
+    void update_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Пасмурно";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = patch(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final Optional<WeatherType> optWeatherType = repository.findById(saved.getId());
+        assertThat(optWeatherType).isPresent();
+        assertThat(optWeatherType.get().getName())
+                .isEqualTo(typeBlizzard.getName());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void update_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(typeClear));
+        final WeatherType saved = repository.save(mapper.convertFromDto(typeBlizzard));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Пасмурно";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = patch(URL_API_V1_WEATHER_TYPES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final Optional<WeatherType> optWeatherType = repository.findById(saved.getId());
+        assertThat(optWeatherType).isPresent();
+        assertThat(optWeatherType.get().getName())
+                .isEqualTo(typeBlizzard.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:write")
     void update_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(typeBlizzard));
@@ -289,7 +508,7 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
 
         final UUID typeClearId = repository.save(mapper.convertFromDto(typeClear)).getId();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = patch(API_V1_WEATHER_TYPES + "/{id}", typeClearId)
+        final var requestBuilder = patch(URL_API_V1_WEATHER_TYPES + "/{id}", typeClearId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -317,11 +536,12 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-types:write")
     void delete_shouldDeleteEntityAndReturnStatusNoContent() throws Exception {
         // given
         final UUID typeClearId = repository.save(mapper.convertFromDto(typeClear)).getId();
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = delete(API_V1_WEATHER_TYPES + "/{id}", typeClearId);
+        final var requestBuilder = delete(URL_API_V1_WEATHER_TYPES + "/{id}", typeClearId);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -330,5 +550,39 @@ class WeatherTypeRestControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isNoContent());
 
         assertThat(repository.findAll()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-types:read")
+    void delete_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID typeClearId = repository.save(mapper.convertFromDto(typeClear)).getId();
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = delete(URL_API_V1_WEATHER_TYPES + "/{id}", typeClearId);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void delete_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID typeClearId = repository.save(mapper.convertFromDto(typeClear)).getId();
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = delete(URL_API_V1_WEATHER_TYPES + "/{id}", typeClearId);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(repository.findAll()).hasSize(1);
     }
 }

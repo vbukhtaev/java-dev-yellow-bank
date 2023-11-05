@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Тест JPA-репозитория типов погоды.
  */
 @DataJpaTest
-class IWeatherTypeJpaRepositoryTest extends AbstractContainerizedTest {
+class WeatherTypeJpaRepositoryTest extends AbstractContainerizedTest {
 
     /**
      * Тестируемый JPA-репозиторий типов погоды.

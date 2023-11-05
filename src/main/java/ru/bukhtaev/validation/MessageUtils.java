@@ -19,6 +19,21 @@ public final class MessageUtils {
     }
 
     /**
+     * Код сообщения о том, что пользователь с указанным логином успешно зарегистрирован.
+     */
+    public static final String MESSAGE_CODE_USER_REGISTERED = "info.user.registered";
+
+    /**
+     * Код сообщения о том, что пользователь с указанным логином не найден.
+     */
+    public static final String MESSAGE_CODE_USER_NOT_FOUND = "validation.user.not-found";
+
+    /**
+     * Код сообщения о том, что пользователь с указанным логином уже зарегистрирован.
+     */
+    public static final String MESSAGE_CODE_USER_UNIQUE_USERNAME = "validation.user.unique-username";
+
+    /**
      * Код сообщения о том, что в качестве аргумента в метод {@link GenerationServiceImpl#generate(List, List, int)}
      * передано некорректное количество записей.
      */

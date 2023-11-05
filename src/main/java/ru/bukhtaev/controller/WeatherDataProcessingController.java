@@ -6,10 +6,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,13 +29,22 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static ru.bukhtaev.controller.WeatherDataProcessingController.URL_API_WEATHER_PROCESSING;
+
 /**
  * Контроллер обработки данных о погоде.
  */
 @Tag(name = "Обработка данных")
 @RestController
-@RequestMapping(value = "/api/weather/processing", produces = "application/json")
+@SecurityRequirement(name = "basicAuth")
+@PreAuthorize("hasAuthority('weather-data:read')")
+@RequestMapping(value = URL_API_WEATHER_PROCESSING, produces = "application/json")
 public class WeatherDataProcessingController {
+
+    /**
+     * URL.
+     */
+    public static final String URL_API_WEATHER_PROCESSING = "/api/weather/processing";
 
     /**
      * Маппер для DTO данных о погоде.

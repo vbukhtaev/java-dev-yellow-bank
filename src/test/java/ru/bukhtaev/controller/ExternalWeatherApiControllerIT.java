@@ -10,6 +10,8 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.config.external.ExternalApiConfigParams;
@@ -32,12 +34,19 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.bukhtaev.controller.ExternalWeatherApiController.URL_API_EXTERNAL;
 import static ru.bukhtaev.util.ErrorCode.*;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 
 /**
  * Интеграционные тесты для взаимодействия с внешним API.
  */
+@WithMockUser(
+        authorities = {
+                "weather-data:read",
+                "weather-data:write"
+        }
+)
 class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
 
     /**
@@ -64,19 +73,14 @@ class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
     private static final String LOCATION_PARAM_NAME = "location";
 
     /**
-     * Базовый URL.
-     */
-    public static final String PATH = "/api/external";
-
-    /**
      * URL для получения текущей погоды.
      */
-    private static final String URL_CURRENT = PATH + "/current";
+    private static final String URL_CURRENT = URL_API_EXTERNAL + "/current";
 
     /**
      * URL для получения и сохранения текущей погоды.
      */
-    private static final String URL_SAVE_CURRENT = PATH + "/save-current";
+    private static final String URL_SAVE_CURRENT = URL_API_EXTERNAL + "/save-current";
 
     /**
      * URL для получения текущей погоды с параметром местоположения.
@@ -205,6 +209,54 @@ class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
                         jsonPath("$.current.temp_c", is(temperature.doubleValue())),
                         jsonPath("$.current.condition.text", is(conditionText))
                 );
+    }
+
+    @Test
+    @WithMockUser
+    void get_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(ResponseEntity.ok(
+                objectMapper.writeValueAsString(weatherResponse)
+        ));
+
+        // when
+        final var requestBuilder = get(
+                URL_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void get_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(ResponseEntity.ok(
+                objectMapper.writeValueAsString(weatherResponse)
+        ));
+
+        // when
+        final var requestBuilder = get(
+                URL_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -614,6 +666,64 @@ class ExternalWeatherApiControllerIT extends AbstractIntegrationTest {
                         jsonPath("$.dateTime",
                                 is(LOCAL_DATE_TIME.format(DATE_TIME_FORMATTER)))
                 );
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void getAndSave_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        uriBuilder.queryParam(
+                apiConfig.getCurrent().getLanguageParamName(),
+                Locale.ENGLISH.getLanguage()
+        );
+
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(ResponseEntity.ok(
+                objectMapper.writeValueAsString(weatherResponse)
+        ));
+
+        // when
+        final var requestBuilder = post(
+                URL_SAVE_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAndSave_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        uriBuilder.queryParam(
+                apiConfig.getCurrent().getLanguageParamName(),
+                Locale.ENGLISH.getLanguage()
+        );
+
+        given(restTemplate.getForEntity(
+                uriBuilder.toUriString(),
+                String.class
+        )).willReturn(ResponseEntity.ok(
+                objectMapper.writeValueAsString(weatherResponse)
+        ));
+
+        // when
+        final var requestBuilder = post(
+                URL_SAVE_CURRENT_WITH_LOCATION,
+                locationName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

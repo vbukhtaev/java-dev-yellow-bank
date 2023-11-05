@@ -13,6 +13,10 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/test-changelog-master.yml
 
+  h2:
+    console:
+      enabled: true
+
 generation:
   count: 16
 
