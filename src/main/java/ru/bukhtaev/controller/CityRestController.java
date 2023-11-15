@@ -18,7 +18,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.NameableRequestDto;
 import ru.bukhtaev.dto.NameableResponseDto;
 import ru.bukhtaev.dto.mapper.ICityMapper;
-import ru.bukhtaev.service.crud.ICityCrudService;
+import ru.bukhtaev.model.City;
+import ru.bukhtaev.service.crud.IDictionaryCrudService;
 import ru.bukhtaev.validation.handling.ErrorResponse;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class CityRestController {
     /**
      * Сервис CRUD операций над городами.
      */
-    private final ICityCrudService crudService;
+    private final IDictionaryCrudService<City, UUID> crudService;
 
     /**
      * Маппер для DTO городов.
@@ -59,7 +60,7 @@ public class CityRestController {
      */
     @Autowired
     public CityRestController(
-            @Qualifier("cityCrudServiceJpa") final ICityCrudService crudService,
+            @Qualifier("cityCrudServiceJpa") final IDictionaryCrudService<City, UUID> crudService,
             final ICityMapper mapper
     ) {
         this.crudService = crudService;

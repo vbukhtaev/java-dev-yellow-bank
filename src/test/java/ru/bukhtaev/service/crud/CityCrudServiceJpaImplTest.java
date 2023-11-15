@@ -3,8 +3,6 @@ package ru.bukhtaev.service.crud;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import ru.bukhtaev.exception.DataNotFoundException;
@@ -49,24 +47,6 @@ class CityCrudServiceJpaImplTest extends AbstractServiceTest {
      */
     @InjectMocks
     private CityCrudServiceJpaImpl underTest;
-
-    /**
-     * Перехватчик ID, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<UUID> idCaptor;
-
-    /**
-     * Перехватчик названия, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<String> nameCaptor;
-
-    /**
-     * Перехватчик города, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<City> cityCaptor;
 
     private City cityKazan;
     private City cityYekaterinburg;
@@ -138,9 +118,9 @@ class CityCrudServiceJpaImplTest extends AbstractServiceTest {
 
         // then
         verify(repository, times(1))
-                .findFirstByName(nameCaptor.capture());
+                .findFirstByName(stringCaptor.capture());
         verifyNoMoreInteractions(repository);
-        assertThat(nameCaptor.getValue())
+        assertThat(stringCaptor.getValue())
                 .isEqualTo(cityKazanName);
     }
 

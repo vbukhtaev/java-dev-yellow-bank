@@ -1,7 +1,7 @@
 package ru.bukhtaev;
 
 import ru.bukhtaev.service.GenerationServiceImpl;
-import ru.bukhtaev.service.crud.IWeatherCrudService;
+import ru.bukhtaev.service.IWeatherProcessingService;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -36,7 +36,7 @@ public class TestUtils {
     public static final String MESSAGE_INCORRECT_COUNT = "Invalid count: {0}";
 
     /**
-     * Сообщение о том, что методу {@link IWeatherCrudService#getTemperature(String, ChronoUnit)}
+     * Сообщение о том, что методу {@link IWeatherProcessingService#getTemperature(String, ChronoUnit)}
      * не удалось найти запрашиваемые данные.
      */
     public static final String MESSAGE_TEMPERATURE_NOT_FOUND

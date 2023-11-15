@@ -28,7 +28,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_UNIQ
         isolation = READ_UNCOMMITTED,
         readOnly = true
 )
-public class WeatherTypeCrudServiceJpaImpl implements IWeatherTypeCrudService {
+public class WeatherTypeCrudServiceJpaImpl implements IDictionaryCrudService<WeatherType, UUID> {
 
     /**
      * Репозиторий.

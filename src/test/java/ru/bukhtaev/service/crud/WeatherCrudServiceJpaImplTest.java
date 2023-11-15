@@ -2,8 +2,6 @@ package ru.bukhtaev.service.crud;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import ru.bukhtaev.exception.DataNotFoundException;
@@ -19,9 +17,6 @@ import ru.bukhtaev.service.AbstractServiceTest;
 import ru.bukhtaev.validation.MessageProvider;
 
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,16 +37,6 @@ import static ru.bukhtaev.validation.MessageUtils.*;
  * над данными о погоде {@link WeatherCrudServiceJpaImpl}
  */
 class WeatherCrudServiceJpaImplTest extends AbstractServiceTest {
-
-    /**
-     * Текущая дата и время.
-     */
-    protected static final LocalDateTime NOW = LocalDateTime.now().withNano(0);
-
-    /**
-     * Дата и время сутки назад от текущей.
-     */
-    protected static final LocalDateTime YESTERDAY = NOW.minusDays(1);
 
     /**
      * Имитация сервиса предоставления сообщений.
@@ -82,24 +67,6 @@ class WeatherCrudServiceJpaImplTest extends AbstractServiceTest {
      */
     @InjectMocks
     private WeatherCrudServiceJpaImpl underTest;
-
-    /**
-     * Перехватчик ID, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<UUID> idCaptor;
-
-    /**
-     * Перехватчик строки, передаваемой в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<String> stringCaptor;
-
-    /**
-     * Перехватчик записи о погоде, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<Weather> weatherCaptor;
 
     private Weather weather1;
     private Weather weather2;
@@ -378,21 +345,6 @@ class WeatherCrudServiceJpaImplTest extends AbstractServiceTest {
                 .deleteById(idCaptor.capture());
         verifyNoMoreInteractions(weatherRepository);
         assertThat(idCaptor.getValue()).isEqualTo(weather1Id);
-    }
-
-    @Test
-    void delete_withCityNameArgument_shouldDeleteMatchingEntity() {
-        // given
-        final String cityName = cityYekaterinburg.getName();
-
-        // when
-        underTest.delete(cityName);
-
-        // then
-        verify(weatherRepository, times(1))
-                .deleteAllByCityName(stringCaptor.capture());
-        verifyNoMoreInteractions(weatherRepository);
-        assertThat(stringCaptor.getValue()).isEqualTo(cityName);
     }
 
     @Test
@@ -703,86 +655,5 @@ class WeatherCrudServiceJpaImplTest extends AbstractServiceTest {
                 .save(weatherCaptor.capture());
         verifyNoMoreInteractions(weatherRepository);
         assertThat(weatherCaptor.getValue()).isEqualTo(weather2);
-    }
-
-    @Test
-    void getTemperatures() {
-        // given
-        final String cityName = cityYekaterinburg.getName();
-        given(weatherRepository.findAll())
-                .willReturn(List.of(
-                        weather1,
-                        weather2,
-                        weather3
-                ));
-
-        // when
-        final var foundData = underTest.getTemperatures(cityName);
-
-        // then
-        assertThat(foundData).hasSize(1);
-        final Weather weather = foundData.get(0);
-        assertThat(weather.getId())
-                .isEqualTo(weather3.getId());
-        assertThat(weather.getCity().getId())
-                .isEqualTo(weather3.getCity().getId());
-        assertThat(weather.getCity().getName())
-                .isEqualTo(weather3.getCity().getName());
-        assertThat(weather.getType().getId())
-                .isEqualTo(weather3.getType().getId());
-        assertThat(weather.getType().getName())
-                .isEqualTo(weather3.getType().getName());
-        assertThat(weather.getTemperature())
-                .isEqualTo(weather3.getTemperature());
-        assertThat(weather.getDateTime())
-                .isEqualTo(weather3.getDateTime());
-    }
-
-    @Test
-    void getTemperature_withExistentData_shouldReturnTemperature() {
-        // given
-        final String cityName = cityYekaterinburg.getName();
-        given(weatherRepository.findAllByCityName(cityName))
-                .willReturn(List.of(
-                        weather2,
-                        weather3
-                ));
-
-        // when
-        final Double temperature = underTest.getTemperature(
-                cityName,
-                ChronoUnit.MINUTES
-        );
-
-        // then
-        assertThat(temperature)
-                .isEqualTo(weather3.getTemperature());
-    }
-
-    @Test
-    void getTemperature_withNonExistentData_shouldThrowException() {
-        // given
-        final String cityName = "Новосибирск";
-        final String errorMessage = MessageFormat.format(
-                "No temperature was found for city=<{0}> and the current time",
-                cityName
-        );
-        given(weatherRepository.findAllByCityName(cityName))
-                .willReturn(Collections.emptyList());
-        given(messageProvider.getMessage(
-                MESSAGE_CODE_TEMPERATURE_NOT_FOUND,
-                cityName
-        )).willReturn(errorMessage);
-
-        // when
-        // then
-        assertThatThrownBy(
-                () -> underTest.getTemperature(
-                        cityName,
-                        ChronoUnit.MINUTES
-                ))
-                .isInstanceOf(DataNotFoundException.class)
-                .extracting(ERROR_MESSAGE_PROPERTY_NAME)
-                .isEqualTo(errorMessage);
     }
 }

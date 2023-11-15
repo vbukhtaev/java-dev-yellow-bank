@@ -12,11 +12,11 @@ import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.model.WeatherType;
-import ru.bukhtaev.service.crud.ICityCrudService;
-import ru.bukhtaev.service.crud.IWeatherCrudService;
-import ru.bukhtaev.service.crud.IWeatherTypeCrudService;
+import ru.bukhtaev.service.crud.ICrudService;
+import ru.bukhtaev.service.crud.IDictionaryCrudService;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 
@@ -30,17 +30,17 @@ public class ExternalWeatherApiServiceJpaImpl extends AbstractExternalWeatherApi
     /**
      * JPA-реализация сервиса CRUD операций над данными о погоде.
      */
-    private final IWeatherCrudService jpaWeatherCrudService;
+    private final ICrudService<Weather, UUID> jpaWeatherCrudService;
 
     /**
      * JPA-реализация сервиса CRUD операций над городами.
      */
-    private final ICityCrudService jpaCityCrudService;
+    private final IDictionaryCrudService<City, UUID> jpaCityCrudService;
 
     /**
      * JPA-реализация сервиса CRUD операций над типами погоды.
      */
-    private final IWeatherTypeCrudService jpaTypeCrudService;
+    private final IDictionaryCrudService<WeatherType, UUID> jpaTypeCrudService;
 
     /**
      * Конструктор.
@@ -59,9 +59,9 @@ public class ExternalWeatherApiServiceJpaImpl extends AbstractExternalWeatherApi
             RestTemplate restTemplate,
             ObjectMapper objectMapper,
             IWeatherMapper dtoMapper,
-            @Qualifier("weatherCrudServiceJpa") IWeatherCrudService jpaWeatherCrudService,
-            @Qualifier("cityCrudServiceJpa") ICityCrudService jpaCityCrudService,
-            @Qualifier("typeCrudServiceJpa") IWeatherTypeCrudService jpaTypeCrudService
+            @Qualifier("weatherCrudServiceJpa") ICrudService<Weather, UUID> jpaWeatherCrudService,
+            @Qualifier("cityCrudServiceJpa") IDictionaryCrudService<City, UUID> jpaCityCrudService,
+            @Qualifier("typeCrudServiceJpa") IDictionaryCrudService<WeatherType, UUID> jpaTypeCrudService
     ) {
         super(
                 apiConfig,

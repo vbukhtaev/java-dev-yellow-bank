@@ -18,7 +18,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.NameableRequestDto;
 import ru.bukhtaev.dto.NameableResponseDto;
 import ru.bukhtaev.dto.mapper.IWeatherTypeMapper;
-import ru.bukhtaev.service.crud.IWeatherTypeCrudService;
+import ru.bukhtaev.model.WeatherType;
+import ru.bukhtaev.service.crud.IDictionaryCrudService;
 import ru.bukhtaev.validation.handling.ErrorResponse;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class WeatherTypeRestController {
     /**
      * Сервис CRUD операций над типами погоды.
      */
-    private final IWeatherTypeCrudService crudService;
+    private final IDictionaryCrudService<WeatherType, UUID> crudService;
 
     /**
      * Маппер для DTO типов погоды.
@@ -59,7 +60,7 @@ public class WeatherTypeRestController {
      */
     @Autowired
     public WeatherTypeRestController(
-            @Qualifier("typeCrudServiceJpa") final IWeatherTypeCrudService crudService,
+            @Qualifier("typeCrudServiceJpa") final IDictionaryCrudService<WeatherType, UUID> crudService,
             final IWeatherTypeMapper mapper
     ) {
         this.crudService = crudService;

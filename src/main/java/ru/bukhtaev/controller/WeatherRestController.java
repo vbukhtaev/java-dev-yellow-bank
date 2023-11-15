@@ -1,7 +1,6 @@
 package ru.bukhtaev.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -19,11 +18,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.WeatherRequestDto;
 import ru.bukhtaev.dto.WeatherResponseDto;
 import ru.bukhtaev.dto.mapper.IWeatherMapper;
-import ru.bukhtaev.service.crud.IWeatherCrudService;
-import ru.bukhtaev.util.Accuracy;
+import ru.bukhtaev.model.Weather;
+import ru.bukhtaev.service.crud.ICrudService;
 import ru.bukhtaev.validation.handling.ErrorResponse;
 
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,7 +45,7 @@ public class WeatherRestController {
     /**
      * Сервис CRUD операций над данными о погоде.
      */
-    private final IWeatherCrudService crudService;
+    private final ICrudService<Weather, UUID> crudService;
 
     /**
      * Маппер для DTO данных о погоде.
@@ -62,7 +60,7 @@ public class WeatherRestController {
      */
     @Autowired
     public WeatherRestController(
-            @Qualifier("weatherCrudServiceJpa") final IWeatherCrudService crudService,
+            @Qualifier("weatherCrudServiceJpa") final ICrudService<Weather, UUID> crudService,
             final IWeatherMapper mapper
     ) {
         this.crudService = crudService;
@@ -257,63 +255,5 @@ public class WeatherRestController {
     @PreAuthorize("hasAuthority('weather-data:write')")
     public void handleDelete(@PathVariable("id") final UUID id) {
         crudService.delete(id);
-    }
-
-    @Operation(summary = "Получение температуры на текущее время по городу")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Температура найдена"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Ошибка валидации",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )}
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Температура не найдена",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )}
-            )
-    })
-    @GetMapping("/current/{city}")
-    @PreAuthorize("hasAuthority('weather-data:read')")
-    public ResponseEntity<Double> get(
-            @Parameter(description = "Название города")
-            @PathVariable("city") final String cityName,
-            @Parameter(description = "Точность")
-            @RequestParam(value = "accuracy", defaultValue = "DAYS") final Accuracy accuracy
-    ) {
-        return ResponseEntity.ok(
-                crudService.getTemperature(cityName, ChronoUnit.valueOf(accuracy.name()))
-        );
-    }
-
-    @Operation(summary = "Удаление всех данных о погоде для города")
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Записи о погоде с указанным городом удалены"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Ошибка валидации",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )}
-            )
-    })
-    @DeleteMapping("/for-city/{city}")
-    @PreAuthorize("hasAuthority('weather-data:write')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(
-            @Parameter(description = "Название города")
-            @PathVariable("city") final String cityName
-    ) {
-        crudService.delete(cityName);
     }
 }

@@ -13,14 +13,18 @@ import ru.bukhtaev.model.WeatherType;
 import ru.bukhtaev.repository.jpa.ICityJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
+import ru.bukhtaev.util.Accuracy;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.containsString;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.bukhtaev.TestUtils.MESSAGE_TEMPERATURE_NOT_FOUND;
 import static ru.bukhtaev.controller.WeatherDataProcessingController.URL_API_WEATHER_PROCESSING;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 
@@ -52,40 +56,63 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     private Weather weather3;
     private Weather weather4;
 
-    private City cityA;
-    private City cityB;
+    private City cityKazan;
+    private City cityYekaterinburg;
+
+    private WeatherType typeClear;
+    private WeatherType typeBlizzard;
 
     @BeforeEach
     public void setUp() {
-        cityA = cityRepository.save(
+        cityKazan = cityRepository.save(
                 City.builder()
-                        .name("City A")
+                        .name("Казань")
                         .build()
         );
-        cityB = cityRepository.save(
+        cityYekaterinburg = cityRepository.save(
                 City.builder()
-                        .name("City B")
+                        .name("Екатеринбург")
                         .build()
         );
 
-        final WeatherType typeA = typeRepository.save(
+        typeClear = typeRepository.save(
                 WeatherType.builder()
-                        .name("Type A")
+                        .name("Ясно")
                         .build()
         );
-        final WeatherType typeB = typeRepository.save(
+        typeBlizzard = typeRepository.save(
                 WeatherType.builder()
-                        .name("Type B")
+                        .name("Метель")
                         .build()
         );
 
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
 
-        weather1 = Weather.builder().city(cityA).type(typeA).temperature(25.37).dateTime(now).build();
-        weather2 = Weather.builder().city(cityA).type(typeA).temperature(-17.9).dateTime(yesterday).build();
-        weather3 = Weather.builder().city(cityB).type(typeB).temperature(24.7).dateTime(now).build();
-        weather4 = Weather.builder().city(cityB).type(typeB).temperature(0.84).dateTime(yesterday).build();
+        weather1 = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(25.37)
+                .dateTime(now)
+                .build();
+        weather2 = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-17.9)
+                .dateTime(yesterday)
+                .build();
+        weather3 = Weather.builder()
+                .city(cityYekaterinburg)
+                .type(typeBlizzard)
+                .temperature(24.7)
+                .dateTime(now)
+                .build();
+        weather4 = Weather.builder()
+                .city(cityYekaterinburg)
+                .type(typeBlizzard)
+                .temperature(0.84)
+                .dateTime(yesterday)
+                .build();
 
         weatherRepository.saveAll(List.of(
                 weather1,
@@ -164,8 +191,8 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                         content().contentType(MediaType.APPLICATION_JSON),
                         content().json("""
                                 {
-                                    "City A": 3.735,
-                                    "City B": 12.77
+                                    "Казань": 3.735,
+                                    "Екатеринбург": 12.77
                                 }
                                 """)
                 );
@@ -215,8 +242,8 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                         content().contentType(MediaType.APPLICATION_JSON),
                         content().json("""
                                 [
-                                    "City A",
-                                    "City B"
+                                    "Казань",
+                                    "Екатеринбург"
                                 ]
                                 """)
                 );
@@ -266,7 +293,7 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
                         content().contentType(MediaType.APPLICATION_JSON),
                         content().json("""
                                 [
-                                   "City B"
+                                   "Екатеринбург"
                                 ]
                                 """)
                 );
@@ -307,12 +334,12 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
         final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
         final String resultJson = """
                 {
-                    "cityIdA": [25.37, -17.9],
-                    "cityIdB": [24.7, 0.84]
+                    "cityKazanId": [25.37, -17.9],
+                    "cityYekaterinburgId": [24.7, 0.84]
                 }
                 """
-                .replace("cityIdA", cityA.getId().toString())
-                .replace("cityIdB", cityB.getId().toString());
+                .replace("cityKazanId", cityKazan.getId().toString())
+                .replace("cityYekaterinburgId", cityYekaterinburg.getId().toString());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -332,14 +359,6 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     void groupTemperaturesById_withoutReadAuthority_accessShouldBeDenied() throws Exception {
         // given
         final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
-        final String resultJson = """
-                {
-                    "cityIdA": [25.37, -17.9],
-                    "cityIdB": [24.7, 0.84]
-                }
-                """
-                .replace("cityIdA", cityA.getId().toString())
-                .replace("cityIdB", cityB.getId().toString());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -353,14 +372,6 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
     void groupTemperaturesById_withoutAuthentication_accessShouldBeDenied() throws Exception {
         // given
         final var requestBuilder = get(URL_API_WEATHER_PROCESSING + "/grouped-by-id");
-        final String resultJson = """
-                {
-                    "cityIdA": [25.37, -17.9],
-                    "cityIdB": [24.7, 0.84]
-                }
-                """
-                .replace("cityIdA", cityA.getId().toString())
-                .replace("cityIdB", cityB.getId().toString());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -439,5 +450,148 @@ class WeatherDataProcessingControllerIT extends AbstractIntegrationTest {
 
                 // then
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void get_withExistentCityNameAndDateTime_shouldReturnTemperature() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        final var requestBuilder = get(
+                URL_API_WEATHER_PROCESSING + "/current/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.HOURS.name()))
+
+                // then
+                .andExpectAll(
+                        status().isOk(),
+                        content().contentType(MediaType.APPLICATION_JSON),
+                        content().json(weather1.getTemperature().toString())
+                );
+    }
+
+    @Test
+    @WithMockUser
+    void get_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        final var requestBuilder = get(
+                URL_API_WEATHER_PROCESSING + "/current/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void get_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        final var requestBuilder = get(
+                URL_API_WEATHER_PROCESSING + "/current/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void get_withNonExistentCityNameAndDateTime_shouldThrowException() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        final String anotherCityName = "Новосибирск";
+        final var requestBuilder = get(
+                URL_API_WEATHER_PROCESSING + "/current/{city}",
+                anotherCityName
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+
+                // then
+                .andExpectAll(
+                        status().isNotFound(),
+                        content().contentType(MediaType.APPLICATION_JSON),
+                        jsonPath("$.violations", hasSize(1)),
+                        jsonPath("$.violations[0].message", is(
+                                MessageFormat.format(
+                                        MESSAGE_TEMPERATURE_NOT_FOUND,
+                                        anotherCityName
+                                )
+                        ))
+                );
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:write")
+    void deleteForCity_shouldDeleteWeatherDataForSpecifiedCityName() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        assertThat(weatherRepository.findAll()).hasSize(4);
+        final var requestBuilder = delete(
+                URL_API_WEATHER_PROCESSING + "/for-city/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isNoContent());
+
+        assertThat(weatherRepository.findAll()).hasSize(2);
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void deleteForCity_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        assertThat(weatherRepository.findAll()).hasSize(4);
+        final var requestBuilder = delete(
+                URL_API_WEATHER_PROCESSING + "/for-city/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(weatherRepository.findAll()).hasSize(4);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void deleteForCity_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weather1);
+        assertThat(weatherRepository.findAll()).hasSize(4);
+        final var requestBuilder = delete(
+                URL_API_WEATHER_PROCESSING + "/for-city/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(weatherRepository.findAll()).hasSize(4);
     }
 }

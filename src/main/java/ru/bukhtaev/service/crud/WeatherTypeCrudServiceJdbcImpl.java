@@ -24,7 +24,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_UNIQ
  * JDBC-реализация сервиса CRUD операций над типами погоды.
  */
 @Service("typeCrudServiceJdbc")
-public class WeatherTypeCrudServiceJdbcImpl implements IWeatherTypeCrudService {
+public class WeatherTypeCrudServiceJdbcImpl implements IDictionaryCrudService<WeatherType, UUID> {
 
     /**
      * Репозиторий.
