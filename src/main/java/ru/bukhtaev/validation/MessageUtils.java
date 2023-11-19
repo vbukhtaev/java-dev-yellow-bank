@@ -1,8 +1,9 @@
 package ru.bukhtaev.validation;
 
+import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.service.GenerationServiceImpl;
+import ru.bukhtaev.service.WeatherCache;
 import ru.bukhtaev.service.WeatherProcessingServiceImpl;
-import ru.bukhtaev.service.crud.WeatherCrudServiceJpaImpl;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -40,6 +41,13 @@ public final class MessageUtils {
     public static final String MESSAGE_CODE_THERE_IS_NO_DATA = "validation.there-is-no-weather-data";
 
     /**
+     * Код сообщения о том, что в качестве аргумента в метод
+     * {@link WeatherCache#put(Weather)} или {@link WeatherCache#delete(Weather)}
+     * переданы некорректные данные о погоде.
+     */
+    public static final String MESSAGE_CODE_INVALID_DATA_TO_BE_CACHED = "validation.invalid-data-to-be-cached";
+
+    /**
      * Код сообщения о том, что в качестве аргумента в метод {@link GenerationServiceImpl#generate(List, List, int)}
      * передан пустой список городов.
      */
@@ -63,7 +71,7 @@ public final class MessageUtils {
     public static final String MESSAGE_CODE_FAILED_TO_COMPUTE = "validation.failed-to-compute";
 
     /**
-     * Код сообщения о том, что методу {@link WeatherCrudServiceJpaImpl#getTemperature(String, ChronoUnit)}
+     * Код сообщения о том, что методу {@link WeatherProcessingServiceImpl#getTemperature(String, ChronoUnit)}
      * не удалось найти запрашиваемые данные.
      */
     public static final String MESSAGE_CODE_TEMPERATURE_NOT_FOUND = "validation.temperature-not-found";

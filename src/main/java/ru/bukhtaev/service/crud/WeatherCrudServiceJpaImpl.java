@@ -12,6 +12,7 @@ import ru.bukhtaev.model.WeatherType;
 import ru.bukhtaev.repository.jpa.ICityJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
+import ru.bukhtaev.service.WeatherCache;
 import ru.bukhtaev.validation.MessageProvider;
 
 import java.util.List;
@@ -56,29 +57,40 @@ public class WeatherCrudServiceJpaImpl implements ICrudService<Weather, UUID> {
     private final MessageProvider messageProvider;
 
     /**
+     * LRU-кэш для данных о погоде.
+     */
+    private final WeatherCache cache;
+
+    /**
      * Конструктор.
      *
      * @param cityRepository        репозиторий городов
      * @param weatherTypeRepository репозиторий типов погоды
      * @param weatherRepository     репозиторий данных о погоде
      * @param messageProvider       сервис предоставления сообщений
+     * @param cache                 LRU-кэш для данных о погоде
      */
     @Autowired
     public WeatherCrudServiceJpaImpl(
             final ICityJpaRepository cityRepository,
             final IWeatherTypeJpaRepository weatherTypeRepository,
             final IWeatherJpaRepository weatherRepository,
-            final MessageProvider messageProvider
+            final MessageProvider messageProvider,
+            final WeatherCache cache
     ) {
         this.cityRepository = cityRepository;
         this.weatherTypeRepository = weatherTypeRepository;
         this.weatherRepository = weatherRepository;
         this.messageProvider = messageProvider;
+        this.cache = cache;
     }
 
     @Override
     public Weather getById(final UUID id) {
-        return findWeatherById(id);
+        return cache.get(id)
+                .orElseGet(() -> cache.put(
+                        findWeatherById(id)
+                ));
     }
 
     @Override
@@ -126,13 +138,16 @@ public class WeatherCrudServiceJpaImpl implements ICrudService<Weather, UUID> {
         final WeatherType foundType = findWeatherTypeById(newType.getId());
         newWeather.setType(foundType);
 
-        return weatherRepository.save(newWeather);
+        return cache.put(
+                weatherRepository.save(newWeather)
+        );
     }
 
     @Override
     @Transactional(isolation = READ_COMMITTED)
     public void delete(final UUID id) {
-        weatherRepository.deleteById(id);
+        weatherRepository.deleteAllById(id)
+                .forEach(cache::delete);
     }
 
     @Override
@@ -173,7 +188,9 @@ public class WeatherCrudServiceJpaImpl implements ICrudService<Weather, UUID> {
         Optional.ofNullable(changedWeather.getDateTime())
                 .ifPresent(weatherToBeUpdated::setDateTime);
 
-        return weatherRepository.save(weatherToBeUpdated);
+        return cache.put(
+                weatherRepository.save(weatherToBeUpdated)
+        );
     }
 
     @Override
@@ -224,7 +241,9 @@ public class WeatherCrudServiceJpaImpl implements ICrudService<Weather, UUID> {
         final WeatherType foundType = findWeatherTypeById(newType.getId());
         weatherToBeReplaced.setType(foundType);
 
-        return weatherRepository.save(weatherToBeReplaced);
+        return cache.put(
+                weatherRepository.save(weatherToBeReplaced)
+        );
     }
 
     /**

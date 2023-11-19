@@ -42,18 +42,26 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
     private final MessageProvider messageProvider;
 
     /**
+     * LRU-кэш для данных о погоде.
+     */
+    private final WeatherCache cache;
+
+    /**
      * Конструктор.
      *
      * @param weatherRepository репозиторий данных о погоде
      * @param messageProvider   сервис предоставления сообщений
+     * @param cache             LRU-кэш для данных о погоде
      */
     @Autowired
     public WeatherProcessingServiceImpl(
             final IWeatherJpaRepository weatherRepository,
-            final MessageProvider messageProvider
+            final MessageProvider messageProvider,
+            final WeatherCache cache
     ) {
         this.weatherRepository = weatherRepository;
         this.messageProvider = messageProvider;
+        this.cache = cache;
     }
 
     @Override
@@ -70,25 +78,30 @@ public class WeatherProcessingServiceImpl implements IWeatherProcessingService {
     public Double getTemperature(final String cityName, final ChronoUnit timeUnit) {
         final LocalDateTime now = LocalDateTime.now();
 
-        final Weather weather = weatherRepository.findAllByCityName(cityName)
-                .stream()
-                .filter(w -> w.getDateTime().truncatedTo(timeUnit)
+        final Weather weather = cache.get(cityName)
+                .filter(fromCache -> fromCache.getDateTime().truncatedTo(timeUnit)
                         .equals(now.truncatedTo(timeUnit)))
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException(
-                        messageProvider.getMessage(
-                                MESSAGE_CODE_TEMPERATURE_NOT_FOUND,
-                                cityName
-                        )
-                ));
+                .orElseGet(() -> weatherRepository.findAllByCityName(cityName)
+                        .stream()
+                        .filter(w -> w.getDateTime().truncatedTo(timeUnit)
+                                .equals(now.truncatedTo(timeUnit)))
+                        .findFirst()
+                        .orElseThrow(() -> new DataNotFoundException(
+                                messageProvider.getMessage(
+                                        MESSAGE_CODE_TEMPERATURE_NOT_FOUND,
+                                        cityName
+                                )
+                        )));
 
+        cache.put(weather);
         return weather.getTemperature();
     }
 
     @Override
     @Transactional(isolation = READ_COMMITTED)
     public void delete(final String cityName) {
-        weatherRepository.deleteAllByCityName(cityName);
+        weatherRepository.deleteAllByCityName(cityName)
+                .forEach(cache::delete);
     }
 
     @Override

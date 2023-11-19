@@ -26,7 +26,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_UNIQ
 
 /**
  * Модульные тесты для JPA-реализации сервиса CRUD операций
- * над типами погоды {@link WeatherTypeCrudServiceJpaImpl}
+ * над типами погоды {@link WeatherTypeCrudServiceJpaImpl}.
  */
 class WeatherTypeCrudServiceJpaImplTest extends AbstractServiceTest {
 

@@ -15,6 +15,7 @@ import java.text.MessageFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +26,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_TEMPERATURE_NOT_F
 
 /**
  * Модульные тесты для реализации сервиса
- * обработки данных о погоде {@link WeatherProcessingServiceImpl}
+ * обработки данных о погоде {@link WeatherProcessingServiceImpl}.
  */
 class WeatherProcessingServiceImplTest extends AbstractServiceTest {
 
@@ -34,6 +35,12 @@ class WeatherProcessingServiceImplTest extends AbstractServiceTest {
      */
     @Mock
     private MessageProvider messageProvider;
+
+    /**
+     * Имитация сервиса, предоставляющего LRU-кэш для данных о погоде.
+     */
+    @Mock
+    private WeatherCache cache;
 
     /**
      * Имитация JPA-репозитория данных о погоде.
@@ -97,9 +104,11 @@ class WeatherProcessingServiceImplTest extends AbstractServiceTest {
     }
 
     @Test
-    void delete_withCityNameArgument_shouldDeleteMatchingEntity() {
+    void delete_withCityNameArgument_shouldDeleteMatchingEntityAndDeleteFromCache() {
         // given
         final String cityName = cityYekaterinburg.getName();
+        given(weatherRepository.deleteAllByCityName(cityName))
+                .willReturn(List.of(weather2, weather3));
 
         // when
         underTest.delete(cityName);
@@ -109,6 +118,11 @@ class WeatherProcessingServiceImplTest extends AbstractServiceTest {
                 .deleteAllByCityName(stringCaptor.capture());
         verifyNoMoreInteractions(weatherRepository);
         assertThat(stringCaptor.getValue()).isEqualTo(cityName);
+        verify(cache, times(1))
+                .delete(weather2);
+        verify(cache, times(1))
+                .delete(weather3);
+        verifyNoMoreInteractions(cache);
     }
 
     @Test
@@ -145,9 +159,11 @@ class WeatherProcessingServiceImplTest extends AbstractServiceTest {
     }
 
     @Test
-    void getTemperature_withExistentData_shouldReturnTemperature() {
+    void getTemperature_withExistentData_shouldReturnTemperatureAndPutToCache() {
         // given
         final String cityName = cityYekaterinburg.getName();
+        given(cache.get(cityName))
+                .willReturn(Optional.empty());
         given(weatherRepository.findAllByCityName(cityName))
                 .willReturn(List.of(
                         weather2,
@@ -157,12 +173,44 @@ class WeatherProcessingServiceImplTest extends AbstractServiceTest {
         // when
         final Double temperature = underTest.getTemperature(
                 cityName,
-                ChronoUnit.MINUTES
+                ChronoUnit.HOURS
         );
 
         // then
         assertThat(temperature)
                 .isEqualTo(weather3.getTemperature());
+        verify(cache, times(1))
+                .get(stringCaptor.capture());
+        assertThat(stringCaptor.getValue())
+                .isEqualTo(cityName);
+        verify(cache, times(1))
+                .put(weatherCaptor.capture());
+        assertThat(weatherCaptor.getValue())
+                .isEqualTo(weather3);
+        verifyNoMoreInteractions(cache);
+    }
+
+    @Test
+    void getTemperature_withExistentDataInCache_shouldReturnTemperature() {
+        // given
+        final String cityName = cityYekaterinburg.getName();
+        given(cache.get(cityName))
+                .willReturn(Optional.of(weather3));
+
+        // when
+        final Double temperature = underTest.getTemperature(
+                cityName,
+                ChronoUnit.HOURS
+        );
+
+        // then
+        assertThat(temperature)
+                .isEqualTo(weather3.getTemperature());
+        verify(weatherRepository, never()).findAllByCityName(any());
+        verify(cache, times(1))
+                .get(stringCaptor.capture());
+        assertThat(stringCaptor.getValue())
+                .isEqualTo(cityName);
     }
 
     @Test

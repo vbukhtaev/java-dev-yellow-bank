@@ -119,9 +119,10 @@ class WeatherJpaRepositoryTest extends AbstractContainerizedTest {
         assertThat(underTest.findAll()).hasSize(3);
 
         // when
-        underTest.deleteAllByCityName(cityYekaterinburg.getName());
+        final List<Weather> removed = underTest.deleteAllByCityName(cityYekaterinburg.getName());
 
         // then
+        assertThat(removed).containsOnly(weather2, weather3);
         final var weatherData = underTest.findAll();
         assertThat(weatherData)
                 .hasSize(1)
@@ -138,9 +139,64 @@ class WeatherJpaRepositoryTest extends AbstractContainerizedTest {
         assertThat(underTest.findAll()).hasSize(3);
 
         // when
-        underTest.deleteAllByCityName(anotherCityName);
+        final List<Weather> removed = underTest.deleteAllByCityName(anotherCityName);
 
         // then
+        assertThat(removed).isEmpty();
+        final var weatherData = underTest.findAll();
+        assertThat(weatherData)
+                .hasSize(3)
+                .containsAll(List.of(
+                        weather1,
+                        weather2,
+                        weather3
+                ));
+    }
+
+    @Test
+    void deleteAllById_withExistentId_shouldDeleteAndReturnMatchingEntities() {
+        // given
+        underTest.save(weather1);
+        underTest.save(weather2);
+        underTest.save(weather3);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        // when
+        final List<Weather> removed = underTest.deleteAllById(weather2.getId());
+
+        // then
+        assertThat(removed).hasSize(1);
+        final Weather weather = removed.get(0);
+        assertThat(weather.getId())
+                .isEqualTo(weather2.getId());
+        assertThat(weather.getCity())
+                .isEqualTo(weather2.getCity());
+        assertThat(weather.getType())
+                .isEqualTo(weather2.getType());
+        assertThat(weather.getTemperature())
+                .isEqualTo(weather2.getTemperature());
+        assertThat(weather.getDateTime())
+                .isEqualTo(weather2.getDateTime());
+        final var weatherData = underTest.findAll();
+        assertThat(weatherData)
+                .hasSize(2)
+                .containsOnly(weather1, weather3);
+    }
+
+    @Test
+    void deleteAllById_withNonExistentId_shouldNotDeleteAnything() {
+        // given
+        final UUID anotherId = UUID.randomUUID();
+        underTest.save(weather1);
+        underTest.save(weather2);
+        underTest.save(weather3);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        // when
+        final List<Weather> removed = underTest.deleteAllById(anotherId);
+
+        // then
+        assertThat(removed).isEmpty();
         final var weatherData = underTest.findAll();
         assertThat(weatherData)
                 .hasSize(3)

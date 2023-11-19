@@ -64,3 +64,7 @@ external-api:
     aqi-param-name: aqi
   bulk-request:
     locations-limit: 49
+
+cache:
+  weather:
+    size: 64
