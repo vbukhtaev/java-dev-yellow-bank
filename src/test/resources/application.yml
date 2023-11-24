@@ -17,6 +17,23 @@ spring:
     console:
       enabled: true
 
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
+      bootstrap-servers: localhost:29092
+      group-id: weather-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: ru.bukhtaev.model
+    producer:
+      acks: -1
+      bootstrap-servers: localhost:29092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    template:
+      default-topic: weather
+
 generation:
   count: 16
 
@@ -35,3 +52,12 @@ external-api:
     aqi-param-name: aqi
   bulk-request:
     locations-limit: 49
+
+weather:
+  frequency: "*/10 * * * * *" # раз в 10 секунд
+  cities:
+    - Kazan
+    - Yekaterinburg
+    - Kaliningrad
+    - Novosibirsk
+    - Irkutsk
