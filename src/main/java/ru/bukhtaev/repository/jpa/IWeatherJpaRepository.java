@@ -15,7 +15,9 @@ import java.util.UUID;
 @Repository
 public interface IWeatherJpaRepository extends JpaRepository<Weather, UUID> {
 
-    void deleteAllByCityName(final String cityName);
+    List<Weather> deleteAllById(final UUID id);
+
+    List<Weather> deleteAllByCityName(final String cityName);
 
     List<Weather> findAllByCityName(final String cityName);
 

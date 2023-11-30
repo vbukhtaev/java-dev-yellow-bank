@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.transaction.annotation.Isolation.*;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
+import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static ru.bukhtaev.model.BaseEntity.FIELD_ID;
 import static ru.bukhtaev.model.NameableEntity.FIELD_NAME;
 import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_CITY_NOT_FOUND;
@@ -27,7 +28,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_CITY_UNIQUE_NAME;
         isolation = READ_COMMITTED,
         readOnly = true
 )
-public class CityCrudServiceJpaImpl implements ICityCrudService {
+public class CityCrudServiceJpaImpl implements IDictionaryCrudService<City, UUID> {
 
     /**
      * Репозиторий.

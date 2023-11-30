@@ -1,11 +1,13 @@
 package ru.bukhtaev.service;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 import ru.bukhtaev.model.Weather;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +18,31 @@ import java.util.UUID;
  */
 @Validated
 public interface IWeatherProcessingService {
+
+    /**
+     * Возвращает данные о погоде в указанном городе на текущую дату.
+     *
+     * @param cityName название города
+     * @return данные о погоде
+     */
+    List<Weather> getTemperatures(@NotBlank final String cityName);
+
+    /**
+     * Возвращает данные о погоде в указанном городе на текущую дату и время.
+     * Дата и время усекаются до указанных единиц.
+     *
+     * @param cityName название города
+     * @param timeUnit единица времени, до которой производится усечения
+     * @return данные о погоде
+     */
+    Double getTemperature(@NotBlank final String cityName, @NotNull final ChronoUnit timeUnit);
+
+    /**
+     * Удаляет все данные о погоде для указанного города.
+     *
+     * @param cityName название города
+     */
+    void delete(@NotBlank final String cityName);
 
     /**
      * Вычисляет среднюю температуру для каждого города в переданном наборе данных

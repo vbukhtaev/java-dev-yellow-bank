@@ -21,7 +21,7 @@ import static ru.bukhtaev.TestUtils.*;
 import static ru.bukhtaev.validation.MessageUtils.*;
 
 /**
- * Модульные тесты для сервиса генерации данных о погоде {@link GenerationServiceImpl}
+ * Модульные тесты для сервиса генерации данных о погоде {@link GenerationServiceImpl}.
  */
 class GenerationServiceImplTest extends AbstractServiceTest {
 

@@ -12,11 +12,9 @@ import ru.bukhtaev.model.WeatherType;
 import ru.bukhtaev.repository.jpa.ICityJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
+import ru.bukhtaev.service.WeatherCache;
 import ru.bukhtaev.validation.MessageProvider;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +34,7 @@ import static ru.bukhtaev.validation.MessageUtils.*;
         isolation = READ_COMMITTED,
         readOnly = true
 )
-public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
+public class WeatherCrudServiceJpaImpl implements ICrudService<Weather, UUID> {
 
     /**
      * Репозиторий городов.
@@ -59,29 +57,40 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
     private final MessageProvider messageProvider;
 
     /**
+     * LRU-кэш для данных о погоде.
+     */
+    private final WeatherCache cache;
+
+    /**
      * Конструктор.
      *
      * @param cityRepository        репозиторий городов
      * @param weatherTypeRepository репозиторий типов погоды
      * @param weatherRepository     репозиторий данных о погоде
      * @param messageProvider       сервис предоставления сообщений
+     * @param cache                 LRU-кэш для данных о погоде
      */
     @Autowired
     public WeatherCrudServiceJpaImpl(
             final ICityJpaRepository cityRepository,
             final IWeatherTypeJpaRepository weatherTypeRepository,
             final IWeatherJpaRepository weatherRepository,
-            final MessageProvider messageProvider
+            final MessageProvider messageProvider,
+            final WeatherCache cache
     ) {
         this.cityRepository = cityRepository;
         this.weatherTypeRepository = weatherTypeRepository;
         this.weatherRepository = weatherRepository;
         this.messageProvider = messageProvider;
+        this.cache = cache;
     }
 
     @Override
     public Weather getById(final UUID id) {
-        return findWeatherById(id);
+        return cache.get(id)
+                .orElseGet(() -> cache.put(
+                        findWeatherById(id)
+                ));
     }
 
     @Override
@@ -129,13 +138,16 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
         final WeatherType foundType = findWeatherTypeById(newType.getId());
         newWeather.setType(foundType);
 
-        return weatherRepository.save(newWeather);
+        return cache.put(
+                weatherRepository.save(newWeather)
+        );
     }
 
     @Override
     @Transactional(isolation = READ_COMMITTED)
     public void delete(final UUID id) {
-        weatherRepository.deleteById(id);
+        weatherRepository.deleteAllById(id)
+                .forEach(cache::delete);
     }
 
     @Override
@@ -171,10 +183,14 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
             weatherToBeUpdated.setType(type);
         }
 
-        Optional.ofNullable(changedWeather.getTemperature()).ifPresent(weatherToBeUpdated::setTemperature);
-        Optional.ofNullable(changedWeather.getDateTime()).ifPresent(weatherToBeUpdated::setDateTime);
+        Optional.ofNullable(changedWeather.getTemperature())
+                .ifPresent(weatherToBeUpdated::setTemperature);
+        Optional.ofNullable(changedWeather.getDateTime())
+                .ifPresent(weatherToBeUpdated::setDateTime);
 
-        return weatherRepository.save(weatherToBeUpdated);
+        return cache.put(
+                weatherRepository.save(weatherToBeUpdated)
+        );
     }
 
     @Override
@@ -225,39 +241,9 @@ public class WeatherCrudServiceJpaImpl implements IWeatherCrudService {
         final WeatherType foundType = findWeatherTypeById(newType.getId());
         weatherToBeReplaced.setType(foundType);
 
-        return weatherRepository.save(weatherToBeReplaced);
-    }
-
-    @Override
-    public List<Weather> getTemperatures(final String cityName) {
-        return weatherRepository.findAll()
-                .stream()
-                .filter(weather -> weather.getCity().getName().equals(cityName)
-                        && weather.getDateTime().toLocalDate().equals(LocalDate.now())
-                )
-                .toList();
-    }
-
-    @Override
-    public Double getTemperature(final String cityName, final ChronoUnit timeUnit) {
-        final LocalDateTime now = LocalDateTime.now();
-
-        final Weather weather = weatherRepository.findAllByCityName(cityName)
-                .stream()
-                .filter(w -> w.getDateTime().truncatedTo(timeUnit)
-                        .equals(now.truncatedTo(timeUnit)))
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException(
-                        messageProvider.getMessage(MESSAGE_CODE_TEMPERATURE_NOT_FOUND, cityName)
-                ));
-
-        return weather.getTemperature();
-    }
-
-    @Override
-    @Transactional(isolation = READ_COMMITTED)
-    public void delete(final String cityName) {
-        weatherRepository.deleteAllByCityName(cityName);
+        return cache.put(
+                weatherRepository.save(weatherToBeReplaced)
+        );
     }
 
     /**

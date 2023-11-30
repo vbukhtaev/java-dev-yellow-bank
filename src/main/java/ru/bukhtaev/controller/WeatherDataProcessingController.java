@@ -10,19 +10,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.bukhtaev.dto.WeatherResponseDto;
 import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.service.IWeatherProcessingService;
-import ru.bukhtaev.service.crud.IWeatherCrudService;
+import ru.bukhtaev.service.crud.ICrudService;
+import ru.bukhtaev.util.Accuracy;
 import ru.bukhtaev.validation.handling.ErrorResponse;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +59,7 @@ public class WeatherDataProcessingController {
     /**
      * Сервис CRUD операций над данными о погоде.
      */
-    private final IWeatherCrudService crudService;
+    private final ICrudService<Weather, UUID> crudService;
 
     /**
      * Конструктор.
@@ -72,7 +72,7 @@ public class WeatherDataProcessingController {
     public WeatherDataProcessingController(
             final IWeatherMapper mapper,
             final IWeatherProcessingService processingService,
-            @Qualifier("weatherCrudServiceJpa") final IWeatherCrudService crudService) {
+            @Qualifier("weatherCrudServiceJpa") final ICrudService<Weather, UUID> crudService) {
         this.processingService = processingService;
         this.crudService = crudService;
         this.mapper = mapper;
@@ -93,6 +93,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("average-temperature")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Double> getAverageTemperature(
             @Parameter(description = "Точность")
             @RequestParam(value = "precision", defaultValue = "2") final Integer precision
@@ -119,6 +120,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("average-temperatures")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Map<String, Double>> getAverageTemperatures(
             @Parameter(description = "Точность")
             @RequestParam(value = "precision", defaultValue = "2") final Integer precision
@@ -148,6 +150,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("cities-warmer")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Set<String>> getCitiesWarmer(
             @Parameter(description = "Температура")
             @RequestParam(value = "temperature") final Double temperature
@@ -177,6 +180,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("cities-strictly-warmer")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Set<String>> getCitiesStrictlyWarmer(
             @Parameter(description = "Температура")
             @RequestParam(value = "temperature") final Double temperature
@@ -203,6 +207,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("grouped-by-id")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Map<UUID, List<Double>>> groupTemperaturesById() {
         final List<Weather> data = crudService.getAll();
 
@@ -226,6 +231,7 @@ public class WeatherDataProcessingController {
             )
     })
     @GetMapping("grouped-by-temperature")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Map<Integer, List<WeatherResponseDto>>> groupByTemperature() {
         final List<Weather> data = crudService.getAll();
 
@@ -241,5 +247,63 @@ public class WeatherDataProcessingController {
                                         .toList())
                         )
         );
+    }
+
+    @Operation(summary = "Получение температуры на текущее время по городу")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Температура найдена"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Температура не найдена",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
+    @GetMapping("/current/{city}")
+    @PreAuthorize("hasAuthority('weather-data:read')")
+    public ResponseEntity<Double> get(
+            @Parameter(description = "Название города")
+            @PathVariable("city") final String cityName,
+            @Parameter(description = "Точность")
+            @RequestParam(value = "accuracy", defaultValue = "DAYS") final Accuracy accuracy
+    ) {
+        return ResponseEntity.ok(
+                processingService.getTemperature(cityName, ChronoUnit.valueOf(accuracy.name()))
+        );
+    }
+
+    @Operation(summary = "Удаление всех данных о погоде для города")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Записи о погоде с указанным городом удалены"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ошибка валидации",
+                    content = {@Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )}
+            )
+    })
+    @DeleteMapping("/for-city/{city}")
+    @PreAuthorize("hasAuthority('weather-data:write')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+            @Parameter(description = "Название города")
+            @PathVariable("city") final String cityName
+    ) {
+        processingService.delete(cityName);
     }
 }

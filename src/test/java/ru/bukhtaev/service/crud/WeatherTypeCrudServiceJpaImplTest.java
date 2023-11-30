@@ -3,8 +3,6 @@ package ru.bukhtaev.service.crud;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import ru.bukhtaev.exception.DataNotFoundException;
@@ -28,7 +26,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_WEATHER_TYPE_UNIQ
 
 /**
  * Модульные тесты для JPA-реализации сервиса CRUD операций
- * над типами погоды {@link WeatherTypeCrudServiceJpaImpl}
+ * над типами погоды {@link WeatherTypeCrudServiceJpaImpl}.
  */
 class WeatherTypeCrudServiceJpaImplTest extends AbstractServiceTest {
 
@@ -49,24 +47,6 @@ class WeatherTypeCrudServiceJpaImplTest extends AbstractServiceTest {
      */
     @InjectMocks
     private WeatherTypeCrudServiceJpaImpl underTest;
-
-    /**
-     * Перехватчик ID, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<UUID> idCaptor;
-
-    /**
-     * Перехватчик названия, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<String> nameCaptor;
-
-    /**
-     * Перехватчик типа погоды, передаваемого в качестве аргумента метода.
-     */
-    @Captor
-    private ArgumentCaptor<WeatherType> typeCaptor;
 
     private WeatherType typeClear;
     private WeatherType typeBlizzard;
@@ -138,9 +118,9 @@ class WeatherTypeCrudServiceJpaImplTest extends AbstractServiceTest {
 
         // then
         verify(repository, times(1))
-                .findFirstByName(nameCaptor.capture());
+                .findFirstByName(stringCaptor.capture());
         verifyNoMoreInteractions(repository);
-        assertThat(nameCaptor.getValue())
+        assertThat(stringCaptor.getValue())
                 .isEqualTo(typeClearName);
     }
 

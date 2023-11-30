@@ -20,6 +20,10 @@ spring:
 generation:
   count: 16
 
+cache:
+  weather:
+    size: 4
+
 external-api:
   base-url: https://api.weatherapi.com
   token: ${WEATHER_API_TOKEN}

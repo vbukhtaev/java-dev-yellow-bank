@@ -24,7 +24,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_CITY_UNIQUE_NAME;
  * JDBC-реализация сервиса CRUD операций над городами.
  */
 @Service("cityCrudServiceJdbc")
-public class CityCrudServiceJdbcImpl implements ICityCrudService {
+public class CityCrudServiceJdbcImpl implements IDictionaryCrudService<City, UUID> {
 
     /**
      * Репозиторий.

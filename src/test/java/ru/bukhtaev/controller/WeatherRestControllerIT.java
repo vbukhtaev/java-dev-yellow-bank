@@ -16,7 +16,6 @@ import ru.bukhtaev.model.WeatherType;
 import ru.bukhtaev.repository.jpa.ICityJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherJpaRepository;
 import ru.bukhtaev.repository.jpa.IWeatherTypeJpaRepository;
-import ru.bukhtaev.util.Accuracy;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -27,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static ru.bukhtaev.TestUtils.MESSAGE_TEMPERATURE_NOT_FOUND;
 import static ru.bukhtaev.controller.WeatherRestController.URL_API_V1_WEATHER_DATA;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 
@@ -736,149 +734,6 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
         final UUID weather1Id = weatherRepository.save(weatherMapper.convertFromDto(weather1)).getId();
         assertThat(weatherRepository.findAll()).hasSize(1);
         var requestBuilder = delete(URL_API_V1_WEATHER_DATA + "/{id}", weather1Id);
-
-        // when
-        mockMvc.perform(requestBuilder)
-
-                // then
-                .andExpect(status().isUnauthorized());
-
-        assertThat(weatherRepository.findAll()).hasSize(1);
-    }
-
-    @Test
-    @WithMockUser(authorities = "weather-data:read")
-    void get_withExistentCityNameAndDateTime_shouldReturnTemperature() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        final var requestBuilder = get(
-                URL_API_V1_WEATHER_DATA + "/current/{city}",
-                cityKazan.getName()
-        );
-
-        // when
-        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.HOURS.name()))
-
-                // then
-                .andExpectAll(
-                        status().isOk(),
-                        content().contentType(MediaType.APPLICATION_JSON),
-                        content().json(weather1.getTemperature().toString())
-                );
-    }
-
-    @Test
-    @WithMockUser
-    void get_withoutReadAuthority_accessShouldBeDenied() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        final var requestBuilder = get(
-                URL_API_V1_WEATHER_DATA + "/current/{city}",
-                cityKazan.getName()
-        );
-
-        // when
-        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
-
-                // then
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithAnonymousUser
-    void get_withoutAuthentication_accessShouldBeDenied() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        final var requestBuilder = get(
-                URL_API_V1_WEATHER_DATA + "/current/{city}",
-                cityKazan.getName()
-        );
-
-        // when
-        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
-
-                // then
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @WithMockUser(authorities = "weather-data:read")
-    void get_withNonExistentCityNameAndDateTime_shouldThrowException() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        final String anotherCityName = "Новосибирск";
-        final var requestBuilder = get(
-                URL_API_V1_WEATHER_DATA + "/current/{city}",
-                anotherCityName
-        );
-
-        // when
-        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
-
-                // then
-                .andExpectAll(
-                        status().isNotFound(),
-                        content().contentType(MediaType.APPLICATION_JSON),
-                        jsonPath("$.violations", hasSize(1)),
-                        jsonPath("$.violations[0].message", is(
-                                MessageFormat.format(
-                                        MESSAGE_TEMPERATURE_NOT_FOUND,
-                                        anotherCityName
-                                )
-                        ))
-                );
-    }
-
-    @Test
-    @WithMockUser(authorities = "weather-data:write")
-    void deleteForCity_shouldDeleteWeatherDataForSpecifiedCityName() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        assertThat(weatherRepository.findAll()).hasSize(1);
-        final var requestBuilder = delete(
-                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
-                cityKazan.getName()
-        );
-
-        // when
-        mockMvc.perform(requestBuilder)
-
-                // then
-                .andExpect(status().isNoContent());
-
-        assertThat(weatherRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    @WithMockUser(authorities = "weather-data:read")
-    void deleteForCity_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        assertThat(weatherRepository.findAll()).hasSize(1);
-        final var requestBuilder = delete(
-                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
-                cityKazan.getName()
-        );
-
-        // when
-        mockMvc.perform(requestBuilder)
-
-                // then
-                .andExpect(status().isForbidden());
-
-        assertThat(weatherRepository.findAll()).hasSize(1);
-    }
-
-    @Test
-    @WithAnonymousUser
-    void deleteForCity_withoutAuthentication_accessShouldBeDenied() throws Exception {
-        // given
-        weatherRepository.save(weatherMapper.convertFromDto(weather1));
-        assertThat(weatherRepository.findAll()).hasSize(1);
-        final var requestBuilder = delete(
-                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
-                cityKazan.getName()
-        );
 
         // when
         mockMvc.perform(requestBuilder)

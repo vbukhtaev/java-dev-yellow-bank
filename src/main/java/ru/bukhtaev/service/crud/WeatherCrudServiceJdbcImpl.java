@@ -14,9 +14,6 @@ import ru.bukhtaev.repository.jdbc.WeatherJdbcRepository;
 import ru.bukhtaev.repository.jdbc.WeatherTypeJdbcRepository;
 import ru.bukhtaev.validation.MessageProvider;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,7 +29,7 @@ import static ru.bukhtaev.validation.MessageUtils.*;
  * JDBC-реализация сервиса CRUD операций над данными о погоде.
  */
 @Service("weatherCrudServiceJdbc")
-public class WeatherCrudServiceJdbcImpl implements IWeatherCrudService {
+public class WeatherCrudServiceJdbcImpl implements ICrudService<Weather, UUID> {
 
     /**
      * Репозиторий городов.
@@ -173,8 +170,10 @@ public class WeatherCrudServiceJdbcImpl implements IWeatherCrudService {
                 );
             });
 
-            Optional.ofNullable(changedWeather.getTemperature()).ifPresent(weatherToBeUpdated::setTemperature);
-            Optional.ofNullable(changedWeather.getDateTime()).ifPresent(weatherToBeUpdated::setDateTime);
+            Optional.ofNullable(changedWeather.getTemperature())
+                    .ifPresent(weatherToBeUpdated::setTemperature);
+            Optional.ofNullable(changedWeather.getDateTime())
+                    .ifPresent(weatherToBeUpdated::setDateTime);
 
             final City newCity = changedWeather.getCity();
             if (newCity != null && newCity.getId() != null) {
@@ -242,50 +241,6 @@ public class WeatherCrudServiceJdbcImpl implements IWeatherCrudService {
 
             return weatherRepository.change(id, weatherToBeReplaced);
         });
-    }
-
-
-    @Override
-    public List<Weather> getTemperatures(final String cityName) {
-        transactionTemplate.setReadOnly(true);
-        transactionTemplate.setIsolationLevel(ISOLATION_READ_COMMITTED);
-        return transactionTemplate.execute(status ->
-                weatherRepository.findAll()
-                        .stream()
-                        .filter(weather -> weather.getCity().getName().equals(cityName)
-                                && weather.getDateTime().toLocalDate().equals(LocalDate.now())
-                        )
-                        .toList()
-        );
-    }
-
-    @Override
-    public Double getTemperature(final String cityName, final ChronoUnit timeUnit) {
-        transactionTemplate.setReadOnly(true);
-        transactionTemplate.setIsolationLevel(ISOLATION_READ_COMMITTED);
-        return transactionTemplate.execute(status -> {
-            final LocalDateTime now = LocalDateTime.now();
-
-            final Weather weather = weatherRepository.findAllByCityName(cityName)
-                    .stream()
-                    .filter(w -> w.getDateTime().truncatedTo(timeUnit)
-                            .equals(now.truncatedTo(timeUnit)))
-                    .findFirst()
-                    .orElseThrow(() -> new DataNotFoundException(
-                            messageProvider.getMessage(MESSAGE_CODE_TEMPERATURE_NOT_FOUND, cityName)
-                    ));
-
-            return weather.getTemperature();
-        });
-    }
-
-    @Override
-    public void delete(final String cityName) {
-        transactionTemplate.setReadOnly(false);
-        transactionTemplate.setIsolationLevel(ISOLATION_READ_COMMITTED);
-        transactionTemplate.executeWithoutResult(status ->
-                weatherRepository.deleteAllByCityName(cityName)
-        );
     }
 
     /**

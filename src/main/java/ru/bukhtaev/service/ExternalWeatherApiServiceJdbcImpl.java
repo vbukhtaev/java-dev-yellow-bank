@@ -12,11 +12,11 @@ import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.model.WeatherType;
-import ru.bukhtaev.service.crud.ICityCrudService;
-import ru.bukhtaev.service.crud.IWeatherCrudService;
-import ru.bukhtaev.service.crud.IWeatherTypeCrudService;
+import ru.bukhtaev.service.crud.ICrudService;
+import ru.bukhtaev.service.crud.IDictionaryCrudService;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.transaction.TransactionDefinition.ISOLATION_SERIALIZABLE;
 
@@ -30,17 +30,17 @@ public class ExternalWeatherApiServiceJdbcImpl extends AbstractExternalWeatherAp
     /**
      * JDBC-реализация сервиса CRUD операций над данными о погоде.
      */
-    private final IWeatherCrudService jdbcWeatherCrudService;
+    private final ICrudService<Weather, UUID> jdbcWeatherCrudService;
 
     /**
      * JDBC-реализация сервиса CRUD операций над городами.
      */
-    private final ICityCrudService jdbcCityCrudService;
+    private final IDictionaryCrudService<City, UUID> jdbcCityCrudService;
 
     /**
      * JDBC-реализация сервиса CRUD операций над типами погоды.
      */
-    private final IWeatherTypeCrudService jdbcTypeCrudService;
+    private final IDictionaryCrudService<WeatherType, UUID> jdbcTypeCrudService;
 
     /**
      * Объект для управления транзакциями.
@@ -64,9 +64,9 @@ public class ExternalWeatherApiServiceJdbcImpl extends AbstractExternalWeatherAp
             final ObjectMapper objectMapper,
             final IWeatherMapper dtoMapper,
             final TransactionTemplate transactionTemplate,
-            @Qualifier("weatherCrudServiceJdbc") final IWeatherCrudService jdbcWeatherCrudService,
-            @Qualifier("cityCrudServiceJdbc") final ICityCrudService jdbcCityCrudService,
-            @Qualifier("typeCrudServiceJdbc") final IWeatherTypeCrudService jdbcTypeCrudService
+            @Qualifier("weatherCrudServiceJdbc") final ICrudService<Weather, UUID> jdbcWeatherCrudService,
+            @Qualifier("cityCrudServiceJdbc") final IDictionaryCrudService<City, UUID> jdbcCityCrudService,
+            @Qualifier("typeCrudServiceJdbc") final IDictionaryCrudService<WeatherType, UUID> jdbcTypeCrudService
     ) {
         super(
                 apiConfig,
