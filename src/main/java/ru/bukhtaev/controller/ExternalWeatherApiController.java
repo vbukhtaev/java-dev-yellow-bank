@@ -6,10 +6,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.bukhtaev.dto.WeatherResponseDto;
 import ru.bukhtaev.dto.external.ExternalApiWeatherResponse;
@@ -20,6 +22,8 @@ import ru.bukhtaev.validation.handling.ErrorResponse;
 
 import java.util.Locale;
 
+import static ru.bukhtaev.controller.ExternalWeatherApiController.URL_API_EXTERNAL;
+
 /**
  * Контроллер для взаимодействия с внешним сервисом данных о погоде.
  *
@@ -27,8 +31,14 @@ import java.util.Locale;
  */
 @Tag(name = "Взаимодействие с внешним API")
 @RestController
-@RequestMapping(value = "/api/external", produces = "application/json")
+@SecurityRequirement(name = "basicAuth")
+@RequestMapping(value = URL_API_EXTERNAL, produces = "application/json")
 public class ExternalWeatherApiController {
+
+    /**
+     * URL.
+     */
+    public static final String URL_API_EXTERNAL = "/api/external";
 
     /**
      * Сервис для выполнения запросов к внешнему API данных о погоде.
@@ -91,6 +101,7 @@ public class ExternalWeatherApiController {
             )
     })
     @GetMapping("/current")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<ExternalApiWeatherResponse> get(
             @Parameter(description = "Местоположение")
             @RequestParam(value = "location", required = false) final String location,
@@ -140,6 +151,7 @@ public class ExternalWeatherApiController {
             )
     })
     @PostMapping("/save-current")
+    @PreAuthorize("hasAuthority('weather-data:write')")
     public ResponseEntity<WeatherResponseDto> getAndSave(
             @Parameter(description = "Местоположение")
             @RequestParam(value = "location", required = false) final String location,

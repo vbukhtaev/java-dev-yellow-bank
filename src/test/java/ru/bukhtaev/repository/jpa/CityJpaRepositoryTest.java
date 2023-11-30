@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Тест JPA-репозитория городов.
  */
 @DataJpaTest
-class ICityJpaRepositoryTest extends AbstractContainerizedTest {
+class CityJpaRepositoryTest extends AbstractContainerizedTest {
 
     /**
      * Тестируемый JPA-репозиторий городов.

@@ -38,7 +38,7 @@ import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 import static ru.bukhtaev.validation.MessageUtils.*;
 
 /**
- * Модельные тесты для JPA-реализации сервиса CRUD операций
+ * Модульные тесты для JPA-реализации сервиса CRUD операций
  * над данными о погоде {@link WeatherCrudServiceJpaImpl}
  */
 class WeatherCrudServiceJpaImplTest extends AbstractServiceTest {

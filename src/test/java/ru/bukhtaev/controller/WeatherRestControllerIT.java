@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import ru.bukhtaev.dto.WeatherRequestDto;
 import ru.bukhtaev.dto.mapper.IWeatherMapper;
 import ru.bukhtaev.model.City;
@@ -26,17 +28,13 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static ru.bukhtaev.TestUtils.MESSAGE_TEMPERATURE_NOT_FOUND;
+import static ru.bukhtaev.controller.WeatherRestController.URL_API_V1_WEATHER_DATA;
 import static ru.bukhtaev.util.Utils.DATE_TIME_FORMATTER;
 
 /**
  * Интеграционные тесты для CRUD операций над данными о погоде.
  */
 class WeatherRestControllerIT extends AbstractIntegrationTest {
-
-    /**
-     * URL.
-     */
-    private static final String API_V1_WEATHER_DATA = "/api/v1/weather-data";
 
     /**
      * Маппер для DTO данных о погоде.
@@ -116,11 +114,12 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getAll_shouldReturnAllEntities() throws Exception {
         // given
         final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather1));
         assertThat(weatherRepository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_WEATHER_DATA);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -142,11 +141,42 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getAll_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAll_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getById_withExistentId_shouldReturnFoundEntity() throws Exception {
         // given
         final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather1));
         assertThat(weatherRepository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_WEATHER_DATA + "/{id}", saved.getId());
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -167,12 +197,43 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getById_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getById_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void getById_withNonExistentId_shouldReturnError() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
         assertThat(weatherRepository.findAll()).hasSize(1);
         final UUID nonExistentId = UUID.randomUUID();
-        final var requestBuilder = get(API_V1_WEATHER_DATA + "/{id}", nonExistentId);
+        final var requestBuilder = get(URL_API_V1_WEATHER_DATA + "/{id}", nonExistentId);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -192,12 +253,13 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:write")
     void create_withNonExistentCityAndDateTime_shouldReturnCreatedEntity() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather2));
         assertThat(weatherRepository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(weather1);
-        var requestBuilder = post(API_V1_WEATHER_DATA)
+        var requestBuilder = post(URL_API_V1_WEATHER_DATA)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -231,13 +293,56 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
         assertThat(weather.getDateTime()).isEqualTo(weather1.getDateTime());
     }
 
+
     @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void create_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(weather1);
+        var requestBuilder = post(URL_API_V1_WEATHER_DATA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
+    }
+
+
+    @Test
+    @WithAnonymousUser
+    void create_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(weather1);
+        var requestBuilder = post(URL_API_V1_WEATHER_DATA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:write")
     void create_withExistentCityAndDateTime_shouldReturnError() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
         assertThat(weatherRepository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(weather1);
-        var requestBuilder = post(API_V1_WEATHER_DATA)
+        var requestBuilder = post(URL_API_V1_WEATHER_DATA)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -263,6 +368,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:write")
     void replace_withNonExistentCityAndDateTime_shouldReturnReplacedEntity() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
@@ -275,7 +381,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                 .dateTime(weather2.getDateTime())
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        var requestBuilder = put(API_V1_WEATHER_DATA + "/{id}", saved.getId())
+        var requestBuilder = put(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -309,6 +415,79 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void replace_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(2);
+        final WeatherRequestDto dto = WeatherRequestDto.builder()
+                .cityId(weather1.getCityId())
+                .typeId(weather1.getTypeId())
+                .temperature(weather1.getTemperature())
+                .dateTime(weather2.getDateTime())
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        var requestBuilder = put(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final List<Weather> weatherData = weatherRepository.findAll();
+        assertThat(weatherData).hasSize(2);
+        final Weather weather = weatherData.get(1);
+        assertThat(weather.getId()).isEqualTo(saved.getId());
+        assertThat(weather.getCity().getId()).isEqualTo(cityYekaterinburg.getId());
+        assertThat(weather.getCity().getName()).isEqualTo(cityYekaterinburg.getName());
+        assertThat(weather.getType().getId()).isEqualTo(typeBlizzard.getId());
+        assertThat(weather.getType().getName()).isEqualTo(typeBlizzard.getName());
+        assertThat(weather.getTemperature()).isEqualTo(weather2.getTemperature());
+        assertThat(weather.getDateTime()).isEqualTo(weather2.getDateTime());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void replace_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(2);
+        final WeatherRequestDto dto = WeatherRequestDto.builder()
+                .cityId(weather1.getCityId())
+                .typeId(weather1.getTypeId())
+                .temperature(weather1.getTemperature())
+                .dateTime(weather2.getDateTime())
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        var requestBuilder = put(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final List<Weather> weatherData = weatherRepository.findAll();
+        assertThat(weatherData).hasSize(2);
+        final Weather weather = weatherData.get(1);
+        assertThat(weather.getId()).isEqualTo(saved.getId());
+        assertThat(weather.getCity().getId()).isEqualTo(cityYekaterinburg.getId());
+        assertThat(weather.getCity().getName()).isEqualTo(cityYekaterinburg.getName());
+        assertThat(weather.getType().getId()).isEqualTo(typeBlizzard.getId());
+        assertThat(weather.getType().getName()).isEqualTo(typeBlizzard.getName());
+        assertThat(weather.getTemperature()).isEqualTo(weather2.getTemperature());
+        assertThat(weather.getDateTime()).isEqualTo(weather2.getDateTime());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:write")
     void replace_withExistentCityAndDateTime_shouldReturnError() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
@@ -321,7 +500,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                 .dateTime(weather1.getDateTime())
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        var requestBuilder = put(API_V1_WEATHER_DATA + "/{id}", saved.getId())
+        var requestBuilder = put(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -354,6 +533,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:write")
     void update_withNonExistentCityAndDateTime_shouldReturnUpdatedEntity() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
@@ -366,7 +546,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                 .dateTime(weather2.getDateTime())
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        var requestBuilder = patch(API_V1_WEATHER_DATA + "/{id}", saved.getId())
+        var requestBuilder = patch(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -399,6 +579,77 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void update_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(2);
+        final WeatherRequestDto dto = WeatherRequestDto.builder()
+                .cityId(weather1.getCityId())
+                .typeId(weather1.getTypeId())
+                .temperature(weather1.getTemperature())
+                .dateTime(weather2.getDateTime())
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        var requestBuilder = patch(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final List<Weather> weatherData = weatherRepository.findAll();
+        assertThat(weatherData).hasSize(2);
+        final Weather weather = weatherData.get(1);
+        assertThat(weather.getCity().getId()).isEqualTo(cityYekaterinburg.getId());
+        assertThat(weather.getCity().getName()).isEqualTo(cityYekaterinburg.getName());
+        assertThat(weather.getType().getId()).isEqualTo(typeBlizzard.getId());
+        assertThat(weather.getType().getName()).isEqualTo(typeBlizzard.getName());
+        assertThat(weather.getTemperature()).isEqualTo(weather2.getTemperature());
+        assertThat(weather.getDateTime()).isEqualTo(weather2.getDateTime());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void update_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final Weather saved = weatherRepository.save(weatherMapper.convertFromDto(weather2));
+        assertThat(weatherRepository.findAll()).hasSize(2);
+        final WeatherRequestDto dto = WeatherRequestDto.builder()
+                .cityId(weather1.getCityId())
+                .typeId(weather1.getTypeId())
+                .temperature(weather1.getTemperature())
+                .dateTime(weather2.getDateTime())
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        var requestBuilder = patch(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final List<Weather> weatherData = weatherRepository.findAll();
+        assertThat(weatherData).hasSize(2);
+        final Weather weather = weatherData.get(1);
+        assertThat(weather.getCity().getId()).isEqualTo(cityYekaterinburg.getId());
+        assertThat(weather.getCity().getName()).isEqualTo(cityYekaterinburg.getName());
+        assertThat(weather.getType().getId()).isEqualTo(typeBlizzard.getId());
+        assertThat(weather.getType().getName()).isEqualTo(typeBlizzard.getName());
+        assertThat(weather.getTemperature()).isEqualTo(weather2.getTemperature());
+        assertThat(weather.getDateTime()).isEqualTo(weather2.getDateTime());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:write")
     void update_withExistentCityAndDateTime_shouldReturnError() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
@@ -412,7 +663,7 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                 .build();
 
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        var requestBuilder = patch(API_V1_WEATHER_DATA + "/{id}", saved.getId())
+        var requestBuilder = patch(URL_API_V1_WEATHER_DATA + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -445,11 +696,12 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:write")
     void delete_shouldDeleteEntityAndReturnStatusNoContent() throws Exception {
         // given
         final UUID weather1Id = weatherRepository.save(weatherMapper.convertFromDto(weather1)).getId();
         assertThat(weatherRepository.findAll()).hasSize(1);
-        var requestBuilder = delete(API_V1_WEATHER_DATA + "/{id}", weather1Id);
+        var requestBuilder = delete(URL_API_V1_WEATHER_DATA + "/{id}", weather1Id);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -461,16 +713,51 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void delete_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID weather1Id = weatherRepository.save(weatherMapper.convertFromDto(weather1)).getId();
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        var requestBuilder = delete(URL_API_V1_WEATHER_DATA + "/{id}", weather1Id);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void delete_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID weather1Id = weatherRepository.save(weatherMapper.convertFromDto(weather1)).getId();
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        var requestBuilder = delete(URL_API_V1_WEATHER_DATA + "/{id}", weather1Id);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void get_withExistentCityNameAndDateTime_shouldReturnTemperature() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
         final var requestBuilder = get(
-                API_V1_WEATHER_DATA + "/current/{city}",
+                URL_API_V1_WEATHER_DATA + "/current/{city}",
                 cityKazan.getName()
         );
 
         // when
-        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.HOURS.name()))
 
                 // then
                 .andExpectAll(
@@ -481,12 +768,47 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void get_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final var requestBuilder = get(
+                URL_API_V1_WEATHER_DATA + "/current/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void get_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        final var requestBuilder = get(
+                URL_API_V1_WEATHER_DATA + "/current/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder.param("accuracy", Accuracy.MINUTES.name()))
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
     void get_withNonExistentCityNameAndDateTime_shouldThrowException() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
         final String anotherCityName = "Новосибирск";
         final var requestBuilder = get(
-                API_V1_WEATHER_DATA + "/current/{city}",
+                URL_API_V1_WEATHER_DATA + "/current/{city}",
                 anotherCityName
         );
 
@@ -508,12 +830,13 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void delete_shouldDeleteWeatherDataForSpecifiedCityName() throws Exception {
+    @WithMockUser(authorities = "weather-data:write")
+    void deleteForCity_shouldDeleteWeatherDataForSpecifiedCityName() throws Exception {
         // given
         weatherRepository.save(weatherMapper.convertFromDto(weather1));
         assertThat(weatherRepository.findAll()).hasSize(1);
         final var requestBuilder = delete(
-                API_V1_WEATHER_DATA + "/for-city/{city}",
+                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
                 cityKazan.getName()
         );
 
@@ -524,5 +847,45 @@ class WeatherRestControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isNoContent());
 
         assertThat(weatherRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "weather-data:read")
+    void deleteForCity_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = delete(
+                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void deleteForCity_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        weatherRepository.save(weatherMapper.convertFromDto(weather1));
+        assertThat(weatherRepository.findAll()).hasSize(1);
+        final var requestBuilder = delete(
+                URL_API_V1_WEATHER_DATA + "/for-city/{city}",
+                cityKazan.getName()
+        );
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(weatherRepository.findAll()).hasSize(1);
     }
 }

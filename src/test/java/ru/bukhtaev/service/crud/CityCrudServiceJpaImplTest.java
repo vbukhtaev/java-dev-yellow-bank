@@ -27,7 +27,7 @@ import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_CITY_NOT_FOUND;
 import static ru.bukhtaev.validation.MessageUtils.MESSAGE_CODE_CITY_UNIQUE_NAME;
 
 /**
- * Модельные тесты для JPA-реализации сервиса CRUD операций
+ * Модульные тесты для JPA-реализации сервиса CRUD операций
  * над городами {@link CityCrudServiceJpaImpl}
  */
 class CityCrudServiceJpaImplTest extends AbstractServiceTest {

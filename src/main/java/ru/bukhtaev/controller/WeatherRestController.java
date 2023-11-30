@@ -6,12 +6,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.WeatherRequestDto;
@@ -26,13 +28,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static ru.bukhtaev.controller.WeatherRestController.URL_API_V1_WEATHER_DATA;
+
 /**
  * Контроллер обработки CRUD операций над данными о погоде.
  */
 @Tag(name = "Данные о погоде")
 @RestController
-@RequestMapping(value = "/api/v1/weather-data", produces = "application/json")
+@SecurityRequirement(name = "basicAuth")
+@RequestMapping(value = URL_API_V1_WEATHER_DATA, produces = "application/json")
 public class WeatherRestController {
+
+    /**
+     * URL.
+     */
+    public static final String URL_API_V1_WEATHER_DATA = "/api/v1/weather-data";
 
     /**
      * Сервис CRUD операций над данными о погоде.
@@ -67,6 +77,7 @@ public class WeatherRestController {
             )
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<List<WeatherResponseDto>> handleGetAll() {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -100,6 +111,7 @@ public class WeatherRestController {
             )
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<WeatherResponseDto> handleGetById(@PathVariable("id") final UUID id) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -130,6 +142,7 @@ public class WeatherRestController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('weather-data:write')")
     public ResponseEntity<WeatherResponseDto> handleCreate(
             @RequestBody final WeatherRequestDto dto,
             final UriComponentsBuilder uriBuilder
@@ -141,7 +154,7 @@ public class WeatherRestController {
         );
 
         return ResponseEntity.created(uriBuilder
-                        .path("/api/v1/weather-data" + "/{id}")
+                        .path(URL_API_V1_WEATHER_DATA + "/{id}")
                         .build(Map.of("id", savedDto.getId())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(savedDto);
@@ -169,6 +182,7 @@ public class WeatherRestController {
             )
     })
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-data:write')")
     public ResponseEntity<WeatherResponseDto> handleUpdate(
             @PathVariable("id") final UUID id,
             @RequestBody final WeatherRequestDto dto
@@ -207,6 +221,7 @@ public class WeatherRestController {
             )
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-data:write')")
     public ResponseEntity<WeatherResponseDto> handleReplace(
             @PathVariable("id") final UUID id,
             @RequestBody final WeatherRequestDto dto
@@ -239,6 +254,7 @@ public class WeatherRestController {
             )
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('weather-data:write')")
     public void handleDelete(@PathVariable("id") final UUID id) {
         crudService.delete(id);
     }
@@ -265,6 +281,7 @@ public class WeatherRestController {
             )
     })
     @GetMapping("/current/{city}")
+    @PreAuthorize("hasAuthority('weather-data:read')")
     public ResponseEntity<Double> get(
             @Parameter(description = "Название города")
             @PathVariable("city") final String cityName,
@@ -291,6 +308,7 @@ public class WeatherRestController {
             )
     })
     @DeleteMapping("/for-city/{city}")
+    @PreAuthorize("hasAuthority('weather-data:write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @Parameter(description = "Название города")

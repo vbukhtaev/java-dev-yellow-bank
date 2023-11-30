@@ -5,12 +5,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.bukhtaev.dto.NameableRequestDto;
@@ -23,13 +25,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static ru.bukhtaev.controller.WeatherTypeRestController.URL_API_V1_WEATHER_TYPES;
+
 /**
  * Контроллер обработки CRUD операций над типами погоды.
  */
 @Tag(name = "Типы погоды")
 @RestController
-@RequestMapping(value = "/api/v1/weather-types", produces = "application/json")
+@SecurityRequirement(name = "basicAuth")
+@RequestMapping(value = URL_API_V1_WEATHER_TYPES, produces = "application/json")
 public class WeatherTypeRestController {
+
+    /**
+     * URL.
+     */
+    public static final String URL_API_V1_WEATHER_TYPES = "/api/v1/weather-types";
 
     /**
      * Сервис CRUD операций над типами погоды.
@@ -64,6 +74,7 @@ public class WeatherTypeRestController {
             )
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('weather-types:read')")
     public ResponseEntity<List<NameableResponseDto>> handleGetAll() {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -97,6 +108,7 @@ public class WeatherTypeRestController {
             )
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-types:read')")
     public ResponseEntity<NameableResponseDto> handleGetById(@PathVariable("id") final UUID id) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -120,6 +132,7 @@ public class WeatherTypeRestController {
             )
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('weather-types:write')")
     public ResponseEntity<NameableResponseDto> handleCreate(
             @RequestBody final NameableRequestDto dto,
             final UriComponentsBuilder uriBuilder
@@ -131,7 +144,7 @@ public class WeatherTypeRestController {
         );
 
         return ResponseEntity.created(uriBuilder
-                        .path("/api/v1/weather-types" + "/{id}")
+                        .path(URL_API_V1_WEATHER_TYPES + "/{id}")
                         .build(Map.of("id", savedDto.getId())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(savedDto);
@@ -159,6 +172,7 @@ public class WeatherTypeRestController {
             )
     })
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-types:write')")
     public ResponseEntity<NameableResponseDto> handleUpdate(
             @PathVariable("id") final UUID id,
             @RequestBody final NameableRequestDto dto
@@ -197,6 +211,7 @@ public class WeatherTypeRestController {
             )
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-types:write')")
     public ResponseEntity<NameableResponseDto> handleReplace(
             @PathVariable("id") final UUID id,
             @RequestBody final NameableRequestDto dto
@@ -228,6 +243,7 @@ public class WeatherTypeRestController {
             )
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('weather-types:write')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void handleDelete(@PathVariable("id") final UUID id) {
         crudService.delete(id);

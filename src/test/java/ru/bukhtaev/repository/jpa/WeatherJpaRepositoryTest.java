@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Тест JPA-репозитория данных о погоде.
  */
 @DataJpaTest
-class IWeatherJpaRepositoryTest extends AbstractContainerizedTest {
+class WeatherJpaRepositoryTest extends AbstractContainerizedTest {
 
     /**
      * Текущая дата и время.

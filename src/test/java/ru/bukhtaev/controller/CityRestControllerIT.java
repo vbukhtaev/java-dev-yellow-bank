@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import ru.bukhtaev.dto.NameableRequestDto;
 import ru.bukhtaev.dto.mapper.ICityMapper;
 import ru.bukhtaev.model.City;
@@ -20,16 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static ru.bukhtaev.controller.CityRestController.URL_API_V1_CITIES;
 
 /**
  * Интеграционные тесты для CRUD операций над городами.
  */
 class CityRestControllerIT extends AbstractIntegrationTest {
-
-    /**
-     * URL.
-     */
-    private static final String API_V1_CITIES = "/api/v1/cities";
 
     /**
      * Маппер для DTO городов.
@@ -62,11 +60,12 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
-    void getAll_shouldReturnAllEntities() throws Exception {
+    @WithMockUser(authorities = "cities:read")
+    void getAll_withReadAuthority_shouldReturnAllEntities() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_CITIES);
+        final var requestBuilder = get(URL_API_V1_CITIES);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -79,11 +78,42 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getAll_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_CITIES);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getAll_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_CITIES);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:read")
     void getById_withExistentId_shouldReturnFoundEntity() throws Exception {
         // given
         final City saved = repository.save(mapper.convertFromDto(cityKazan));
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = get(API_V1_CITIES + "/{id}", saved.getId());
+        final var requestBuilder = get(URL_API_V1_CITIES + "/{id}", saved.getId());
 
         // when
         mockMvc.perform(requestBuilder)
@@ -97,12 +127,43 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser
+    void getById_withoutReadAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final City saved = repository.save(mapper.convertFromDto(cityKazan));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_CITIES + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void getById_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final City saved = repository.save(mapper.convertFromDto(cityKazan));
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = get(URL_API_V1_CITIES + "/{id}", saved.getId());
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:read")
     void getById_withNonExistentId_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
         assertThat(repository.findAll()).hasSize(1);
         final String nonExistentId = UUID.randomUUID().toString();
-        final var requestBuilder = get(API_V1_CITIES + "/{id}", nonExistentId);
+        final var requestBuilder = get(URL_API_V1_CITIES + "/{id}", nonExistentId);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -122,12 +183,13 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:write")
     void create_withNonExistentName_shouldReturnCreatedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityYekaterinburg));
         assertThat(repository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(cityKazan);
-        final var requestBuilder = post(API_V1_CITIES)
+        final var requestBuilder = post(URL_API_V1_CITIES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -150,12 +212,53 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:read")
+    void create_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(cityKazan);
+        final var requestBuilder = post(URL_API_V1_CITIES)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void create_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(1);
+        final String jsonRequest = objectMapper.writeValueAsString(cityKazan);
+        final var requestBuilder = post(URL_API_V1_CITIES)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:write")
     void create_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
         assertThat(repository.findAll()).hasSize(1);
         final String jsonRequest = objectMapper.writeValueAsString(cityKazan);
-        final var requestBuilder = post(API_V1_CITIES)
+        final var requestBuilder = post(URL_API_V1_CITIES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -180,6 +283,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:write")
     void replace_withNonExistentName_shouldReturnReplacedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
@@ -190,7 +294,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
                 .name(newName)
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = put(API_V1_CITIES + "/{id}", saved.getId())
+        final var requestBuilder = put(URL_API_V1_CITIES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -211,6 +315,63 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:read")
+    void replace_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        final City saved = repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Новосибирск";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = put(URL_API_V1_CITIES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final Optional<City> optCity = repository.findById(saved.getId());
+        assertThat(optCity).isPresent();
+        assertThat(optCity.get().getName())
+                .isEqualTo(cityYekaterinburg.getName());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void replace_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        final City saved = repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Новосибирск";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = put(URL_API_V1_CITIES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final Optional<City> optCity = repository.findById(saved.getId());
+        assertThat(optCity).isPresent();
+        assertThat(optCity.get().getName())
+                .isEqualTo(cityYekaterinburg.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:write")
     void replace_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
@@ -220,7 +381,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
                 .name(cityKazan.getName())
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = put(API_V1_CITIES + "/{id}", saved.getId())
+        final var requestBuilder = put(URL_API_V1_CITIES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -248,6 +409,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:write")
     void update_withNonExistentName_shouldReturnUpdatedEntity() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityKazan));
@@ -258,7 +420,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
                 .name(newName)
                 .build();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = patch(API_V1_CITIES + "/{id}", saved.getId())
+        final var requestBuilder = patch(URL_API_V1_CITIES + "/{id}", saved.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -279,6 +441,63 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:read")
+    void update_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        final City saved = repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Новосибирск";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = patch(URL_API_V1_CITIES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        final Optional<City> optCity = repository.findById(saved.getId());
+        assertThat(optCity).isPresent();
+        assertThat(optCity.get().getName())
+                .isEqualTo(cityYekaterinburg.getName());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void update_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        repository.save(mapper.convertFromDto(cityKazan));
+        final City saved = repository.save(mapper.convertFromDto(cityYekaterinburg));
+        assertThat(repository.findAll()).hasSize(2);
+        final String newName = "Новосибирск";
+        final NameableRequestDto dto = NameableRequestDto.builder()
+                .name(newName)
+                .build();
+        final String jsonRequest = objectMapper.writeValueAsString(dto);
+        final var requestBuilder = patch(URL_API_V1_CITIES + "/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequest);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        final Optional<City> optCity = repository.findById(saved.getId());
+        assertThat(optCity).isPresent();
+        assertThat(optCity.get().getName())
+                .isEqualTo(cityYekaterinburg.getName());
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:write")
     void update_withExistentName_shouldReturnError() throws Exception {
         // given
         repository.save(mapper.convertFromDto(cityYekaterinburg));
@@ -289,7 +508,7 @@ class CityRestControllerIT extends AbstractIntegrationTest {
 
         final UUID cityKazanId = repository.save(mapper.convertFromDto(cityKazan)).getId();
         final String jsonRequest = objectMapper.writeValueAsString(dto);
-        final var requestBuilder = patch(API_V1_CITIES + "/{id}", cityKazanId)
+        final var requestBuilder = patch(URL_API_V1_CITIES + "/{id}", cityKazanId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest);
 
@@ -317,11 +536,12 @@ class CityRestControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "cities:write")
     void delete_shouldDeleteEntityAndReturnStatusNoContent() throws Exception {
         // given
         final UUID cityKazanId = repository.save(mapper.convertFromDto(cityKazan)).getId();
         assertThat(repository.findAll()).hasSize(1);
-        final var requestBuilder = delete(API_V1_CITIES + "/{id}", cityKazanId);
+        final var requestBuilder = delete(URL_API_V1_CITIES + "/{id}", cityKazanId);
 
         // when
         mockMvc.perform(requestBuilder)
@@ -330,5 +550,39 @@ class CityRestControllerIT extends AbstractIntegrationTest {
                 .andExpect(status().isNoContent());
 
         assertThat(repository.findAll()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "cities:read")
+    void delete_withoutWriteAuthority_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID cityKazanId = repository.save(mapper.convertFromDto(cityKazan)).getId();
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = delete(URL_API_V1_CITIES + "/{id}", cityKazanId);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void delete_withoutAuthentication_accessShouldBeDenied() throws Exception {
+        // given
+        final UUID cityKazanId = repository.save(mapper.convertFromDto(cityKazan)).getId();
+        assertThat(repository.findAll()).hasSize(1);
+        final var requestBuilder = delete(URL_API_V1_CITIES + "/{id}", cityKazanId);
+
+        // when
+        mockMvc.perform(requestBuilder)
+
+                // then
+                .andExpect(status().isUnauthorized());
+
+        assertThat(repository.findAll()).hasSize(1);
     }
 }
