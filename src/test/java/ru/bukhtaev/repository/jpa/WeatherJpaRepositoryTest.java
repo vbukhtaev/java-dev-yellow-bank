@@ -5,10 +5,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
 import ru.bukhtaev.AbstractContainerizedTest;
 import ru.bukhtaev.model.City;
 import ru.bukhtaev.model.Weather;
 import ru.bukhtaev.model.WeatherType;
+import ru.bukhtaev.util.WeatherSort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -241,6 +243,99 @@ class WeatherJpaRepositoryTest extends AbstractContainerizedTest {
     }
 
     @Test
+    void findAllByCityName_withPageableAndExistentCityName_shouldReturnFoundEntities() {
+        // given
+        final var todayWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-15.7)
+                .dateTime(NOW)
+                .build();
+
+        final var yesterdayWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-18.3)
+                .dateTime(NOW.minusDays(1))
+                .build();
+
+        final var tomorrowWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-16.5)
+                .dateTime(NOW.plusDays(1))
+                .build();
+
+        underTest.save(todayWeather);
+        underTest.save(yesterdayWeather);
+        underTest.save(tomorrowWeather);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        final var pageRequest = PageRequest.of(
+                0,
+                2,
+                WeatherSort.DATE_TIME_DESC.getSortValue()
+        );
+
+        // when
+        final var weatherData = underTest.findAllByCityName(
+                cityKazan.getName(),
+                pageRequest
+        );
+
+        // then
+        assertThat(weatherData)
+                .hasSize(2)
+                .containsOnly(todayWeather, tomorrowWeather);
+    }
+
+    @Test
+    void findAllByCityName_withPageableAndNonExistentCityName_shouldReturnEmptyList() {
+        // given
+        final var todayWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-15.7)
+                .dateTime(NOW)
+                .build();
+
+        final var yesterdayWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-18.3)
+                .dateTime(NOW.minusDays(1))
+                .build();
+
+        final var tomorrowWeather = Weather.builder()
+                .city(cityKazan)
+                .type(typeClear)
+                .temperature(-16.5)
+                .dateTime(NOW.plusDays(1))
+                .build();
+
+        final String anotherCityName = "Новосибирск";
+        underTest.save(todayWeather);
+        underTest.save(yesterdayWeather);
+        underTest.save(tomorrowWeather);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        final var pageRequest = PageRequest.of(
+                0,
+                2,
+                WeatherSort.DATE_TIME_DESC.getSortValue()
+        );
+
+        // when
+        final var weatherData = underTest.findAllByCityName(
+                anotherCityName,
+                pageRequest
+        );
+
+        // then
+        assertThat(weatherData).isEmpty();
+    }
+
+    @Test
     void findFirstByCityIdAndDateTime_withExistentData_shouldReturnFoundEntity() {
         // given
         underTest.save(weather1);
@@ -277,6 +372,50 @@ class WeatherJpaRepositoryTest extends AbstractContainerizedTest {
         // when
         final var optWeather = underTest.findFirstByCityIdAndDateTime(
                 cityKazan.getId(),
+                YESTERDAY
+        );
+
+        // then
+        assertThat(optWeather).isNotPresent();
+    }
+
+    @Test
+    void findFirstByCityNameAndDateTime_withExistentData_shouldReturnFoundEntity() {
+        // given
+        underTest.save(weather1);
+        underTest.save(weather2);
+        underTest.save(weather3);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        // when
+        final var optWeather = underTest.findFirstByCityNameAndDateTime(
+                cityKazan.getName(),
+                NOW
+        );
+
+        // then
+        assertThat(optWeather).isPresent();
+        assertThat(optWeather.get().getCity())
+                .isEqualTo(weather1.getCity());
+        assertThat(optWeather.get().getType())
+                .isEqualTo(weather1.getType());
+        assertThat(optWeather.get().getTemperature())
+                .isEqualTo(weather1.getTemperature());
+        assertThat(optWeather.get().getDateTime())
+                .isEqualTo(weather1.getDateTime());
+    }
+
+    @Test
+    void findFirstByCityNameAndDateTime_withNonExistentData_shouldReturnEmptyOptional() {
+        // given
+        underTest.save(weather1);
+        underTest.save(weather2);
+        underTest.save(weather3);
+        assertThat(underTest.findAll()).hasSize(3);
+
+        // when
+        final var optWeather = underTest.findFirstByCityNameAndDateTime(
+                cityKazan.getName(),
                 YESTERDAY
         );
 

@@ -1,5 +1,6 @@
 package ru.bukhtaev.repository.jpa;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.bukhtaev.model.Weather;
@@ -21,8 +22,18 @@ public interface IWeatherJpaRepository extends JpaRepository<Weather, UUID> {
 
     List<Weather> findAllByCityName(final String cityName);
 
+    List<Weather> findAllByCityName(
+            final String cityName,
+            final Pageable pageable
+    );
+
     Optional<Weather> findFirstByCityIdAndDateTime(
             final UUID cityId,
+            final LocalDateTime dateTime
+    );
+
+    Optional<Weather> findFirstByCityNameAndDateTime(
+            final String cityName,
             final LocalDateTime dateTime
     );
 
